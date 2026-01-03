@@ -146,7 +146,7 @@ func main() {
 	dsn := "host=" + getEnv("DB_HOST", "localhost") +
 		" user=" + getEnv("DB_USER", "postgres") +
 		" password=" + getEnv("DB_PASSWORD", "postgres") +
-		" dbname=" + getEnv("DB_NAME", "vegan_review") +
+		" dbname=" + getEnv("DB_NAME", "veganbite") +
 		" port=" + getEnv("DB_PORT", "5432") +
 		" sslmode=disable"
 

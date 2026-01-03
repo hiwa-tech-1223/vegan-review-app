@@ -1,11 +1,11 @@
 services:
   db:
     image: postgres:18-alpine
-    container_name: vegan-review-db
+    container_name: veganbite-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: vegan_review
+      POSTGRES_DB: veganbite
     ports:
       - "5432:5432"
     volumes:
@@ -20,7 +20,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: vegan-review-backend
+    container_name: veganbite-backend
     ports:
       - "8080:8080"
     env_file:
@@ -30,7 +30,7 @@ services:
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_NAME: vegan_review
+      DB_NAME: veganbite
       FRONTEND_URL: http://localhost:5173
     depends_on:
       db:
@@ -43,7 +43,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: vegan-review-frontend
+    container_name: veganbite-frontend
     ports:
       - "5173:5173"
     environment:
