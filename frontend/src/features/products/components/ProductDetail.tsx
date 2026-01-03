@@ -1,67 +1,161 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
-import { ArrowLeft, Heart, Leaf } from 'lucide-react';
-import { mockProducts, mockReviews } from '../../../data/mockData';
-import { User } from '../../auth/types';
-import { Review } from '../../reviews/types';
+import { ArrowLeft, Heart, Leaf, Loader2 } from 'lucide-react';
+import { useAuth } from '../../auth';
+import { productApi } from '../api';
+import { ApiProduct } from '../types';
+import { reviewApi, ApiReview } from '../../reviews';
+import { userApi } from '../../users';
 
-interface ProductDetailProps {
-  user: User | null;
-  reviews: Review[];
-  setReviews: (reviews: Review[]) => void;
-  favorites: string[];
-  setFavorites: (favorites: string[]) => void;
-}
-
-export function ProductDetail({ user, reviews, setReviews, favorites, setFavorites }: ProductDetailProps) {
+export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const product = mockProducts.find(p => p.id === id);
+  const { user, token } = useAuth();
 
+  // 商品データ
+  const [product, setProduct] = useState<ApiProduct | null>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+  const [productError, setProductError] = useState<string | null>(null);
+
+  // レビューデータ
+  const [reviews, setReviews] = useState<ApiReview[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+
+  // お気に入り状態
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+
+  // レビューフォーム
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
-  if (!product) {
-    return <div>Product not found</div>;
-  }
+  // 商品詳細を取得
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      setIsLoadingProduct(true);
+      setProductError(null);
+      try {
+        const data = await productApi.getProduct(id);
+        setProduct(data);
+      } catch (err) {
+        setProductError('商品の取得に失敗しました / Failed to fetch product');
+        console.error('Failed to fetch product:', err);
+      } finally {
+        setIsLoadingProduct(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
-  const productReviews = [...mockReviews.filter(r => r.productId === id), ...reviews.filter(r => r.productId === id)];
-  const isFavorite = favorites.includes(product.id);
+  // レビュー一覧を取得
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return;
+      setIsLoadingReviews(true);
+      try {
+        const data = await reviewApi.getProductReviews(id);
+        setReviews(data ?? []);
+      } catch (err) {
+        console.error('Failed to fetch reviews:', err);
+        setReviews([]);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+    fetchReviews();
+  }, [id]);
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  // お気に入り状態を取得
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!user || !token || !id) return;
+      try {
+        const favorites = await userApi.getFavorites(user.id, token);
+        const isFav = favorites?.some((f: { productId: string }) => f.productId === id) ?? false;
+        setIsFavorite(isFav);
+      } catch (err) {
+        console.error('Failed to fetch favorites:', err);
+      }
+    };
+    fetchFavorites();
+  }, [user, token, id]);
+
+  // レビュー投稿
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
+    if (!user || !token) {
       navigate('/login');
       return;
     }
-    if (comment.trim()) {
-      const newReview: Review = {
-        id: `r${Date.now()}`,
-        productId: product.id,
-        userId: user.id,
-        userName: user.name,
-        userAvatar: user.avatar,
-        rating,
-        comment,
-        date: new Date().toISOString().split('T')[0]
-      };
-      setReviews([...reviews, newReview]);
+    if (!comment.trim() || !id) return;
+
+    setIsSubmittingReview(true);
+    setReviewError(null);
+    try {
+      const newReview = await reviewApi.createReview(id, { rating, comment }, token);
+      setReviews([newReview, ...reviews]);
       setComment('');
       setRating(5);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to submit review';
+      setReviewError(message);
+      console.error('Failed to submit review:', err);
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
-  const toggleFavorite = () => {
-    if (!user) {
+  // お気に入り切り替え
+  const toggleFavorite = async () => {
+    if (!user || !token) {
       navigate('/login');
       return;
     }
-    if (isFavorite) {
-      setFavorites(favorites.filter(id => id !== product.id));
-    } else {
-      setFavorites([...favorites, product.id]);
+    if (!id) return;
+
+    setIsTogglingFavorite(true);
+    try {
+      if (isFavorite) {
+        await userApi.removeFavorite(user.id, id, token);
+        setIsFavorite(false);
+      } else {
+        await userApi.addFavorite(user.id, id, token);
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      console.error('Failed to toggle favorite:', err);
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
+
+  // ローディング中
+  if (isLoadingProduct) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--primary)' }} />
+      </div>
+    );
+  }
+
+  // エラー時
+  if (productError || !product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <p className="text-red-500 mb-4">{productError || 'Product not found'}</p>
+        <button
+          onClick={() => navigate('/')}
+          className="px-4 py-2 rounded-full"
+          style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+        >
+          Back to Home / ホームに戻る
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
@@ -92,17 +186,31 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
           <div className="grid md:grid-cols-2 gap-8 p-8">
             <div>
               <img
-                src={product.image}
+                src={product.imageUrl || 'https://placehold.co/400x300?text=No+Image'}
                 alt={product.name}
                 className="w-full h-80 object-cover rounded-xl"
               />
             </div>
             <div>
-              <div
-                className="inline-block px-3 py-1 rounded-full text-sm mb-4"
-                style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
-              >
-                {product.category} / {product.categoryJa}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {product.categories && product.categories.length > 0 ? (
+                  product.categories.map(cat => (
+                    <span
+                      key={cat.id}
+                      className="inline-block px-3 py-1 rounded-full text-sm"
+                      style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
+                    >
+                      {cat.name} / {cat.nameJa}
+                    </span>
+                  ))
+                ) : (
+                  <span
+                    className="inline-block px-3 py-1 rounded-full text-sm"
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
+                  >
+                    Uncategorized / 未分類
+                  </span>
+                )}
               </div>
               <h1 className="text-3xl mb-2" style={{ color: 'var(--text)' }}>
                 {product.name}
@@ -123,12 +231,13 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
                   ))}
                 </div>
                 <span style={{ color: 'var(--text)' }}>
-                  ({productReviews.length} reviews / レビュー)
+                  ({product.reviewCount} reviews / レビュー)
                 </span>
               </div>
               <button
                 onClick={toggleFavorite}
-                className="flex items-center gap-2 px-6 py-3 rounded-full mb-6 transition-all"
+                disabled={isTogglingFavorite}
+                className="flex items-center gap-2 px-6 py-3 rounded-full mb-6 transition-all disabled:opacity-50"
                 style={{
                   backgroundColor: isFavorite ? 'var(--accent)' : 'var(--background)',
                   color: isFavorite ? 'white' : 'var(--primary)'
@@ -159,6 +268,11 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
           <h2 className="text-2xl mb-4" style={{ color: 'var(--text)' }}>
             Write a Review / レビューを書く
           </h2>
+          {reviewError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {reviewError}
+            </div>
+          )}
           <form onSubmit={handleSubmitReview}>
             <div className="mb-4">
               <label className="block mb-2" style={{ color: 'var(--text)' }}>
@@ -192,10 +306,11 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
             </div>
             <button
               type="submit"
-              className="px-6 py-3 rounded-full text-white"
+              disabled={isSubmittingReview || !comment.trim()}
+              className="px-6 py-3 rounded-full text-white disabled:opacity-50"
               style={{ backgroundColor: 'var(--primary)' }}
             >
-              Submit Review / レビューを投稿
+              {isSubmittingReview ? 'Submitting... / 投稿中...' : 'Submit Review / レビューを投稿'}
             </button>
           </form>
         </div>
@@ -203,40 +318,52 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
         {/* Reviews List */}
         <div className="bg-white rounded-xl shadow-md p-8 mt-8">
           <h2 className="text-2xl mb-6" style={{ color: 'var(--text)' }}>
-            Reviews / レビュー ({productReviews.length})
+            Reviews / レビュー ({reviews.length})
           </h2>
-          <div className="space-y-6">
-            {productReviews.map(review => (
-              <div key={review.id} className="border-b pb-6 last:border-b-0">
-                <div className="flex items-start gap-4">
-                  <img
-                    src={review.userAvatar}
-                    alt={review.userName}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p style={{ color: 'var(--text)' }}>{review.userName}</p>
-                        <p className="text-sm text-gray-500">{review.date}</p>
+          {isLoadingReviews ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--primary)' }} />
+            </div>
+          ) : reviews.length === 0 ? (
+            <p className="text-center py-8" style={{ color: 'var(--text)' }}>
+              No reviews yet / まだレビューがありません
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {reviews.map(review => (
+                <div key={review.id} className="border-b pb-6 last:border-b-0">
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={review.user?.avatar || 'https://placehold.co/48x48?text=User'}
+                      alt={review.user?.name || 'User'}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p style={{ color: 'var(--text)' }}>{review.user?.name || 'Anonymous'}</p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <span
+                              key={i}
+                              style={{ color: i < review.rating ? 'var(--accent)' : '#ddd' }}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            style={{ color: i < review.rating ? 'var(--accent)' : '#ddd' }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
+                      <p style={{ color: 'var(--text)' }}>{review.comment}</p>
                     </div>
-                    <p style={{ color: 'var(--text)' }}>{review.comment}</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

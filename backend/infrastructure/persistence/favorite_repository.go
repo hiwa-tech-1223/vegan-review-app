@@ -18,7 +18,7 @@ func NewFavoriteRepository(db *gorm.DB) repository.FavoriteRepository {
 
 func (r *favoriteRepository) FindByUserID(userID string) ([]entity.Favorite, error) {
 	var favorites []entity.Favorite
-	if err := r.db.Preload("Product").Preload("Product.Category").Where("user_id = ?", userID).Find(&favorites).Error; err != nil {
+	if err := r.db.Preload("Product").Preload("Product.Categories").Where("user_id = ?", userID).Find(&favorites).Error; err != nil {
 		return nil, err
 	}
 	return favorites, nil

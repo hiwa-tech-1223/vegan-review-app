@@ -68,18 +68,7 @@ function AppRoutes() {
     <Routes>
       {/* Public User Routes */}
       <Route path="/" element={<ProductListing user={user} />} />
-      <Route
-        path="/product/:id"
-        element={
-          <ProductDetail
-            user={user}
-            reviews={reviews}
-            setReviews={setReviews}
-            favorites={favorites}
-            setFavorites={setFavorites}
-          />
-        }
-      />
+      <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/login" element={<UserLogin />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/terms" element={<Terms />} />

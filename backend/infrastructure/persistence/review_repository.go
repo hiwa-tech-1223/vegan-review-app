@@ -26,7 +26,7 @@ func (r *reviewRepository) FindByProductID(productID string) ([]entity.Review, e
 
 func (r *reviewRepository) FindByUserID(userID string) ([]entity.Review, error) {
 	var reviews []entity.Review
-	if err := r.db.Preload("Product").Preload("Product.Category").Where("user_id = ?", userID).Order("created_at DESC").Find(&reviews).Error; err != nil {
+	if err := r.db.Preload("Product").Preload("Product.Categories").Where("user_id = ?", userID).Order("created_at DESC").Find(&reviews).Error; err != nil {
 		return nil, err
 	}
 	return reviews, nil
