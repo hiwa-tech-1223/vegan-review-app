@@ -26,7 +26,7 @@ func (r *productRepository) FindAll(categorySlug, search string) ([]entity.Produ
 	}
 
 	if search != "" {
-		query = query.Where("name ILIKE ? OR name_ja ILIKE ?", "%"+search+"%", "%"+search+"%")
+		query = query.Where("products.name ILIKE ? OR products.name_ja ILIKE ?", "%"+search+"%", "%"+search+"%")
 	}
 
 	if err := query.Order("created_at DESC").Find(&products).Error; err != nil {

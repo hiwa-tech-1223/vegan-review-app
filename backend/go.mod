@@ -1,4 +1,4 @@
-module vegan-review-backend
+module backend
 
 go 1.25
 
