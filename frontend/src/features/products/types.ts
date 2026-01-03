@@ -30,8 +30,7 @@ export interface ApiCategory {
 
 export interface ApiProduct {
   id: string;
-  categoryId: string | null;
-  category: ApiCategory | null;
+  categories: ApiCategory[];  // 多対多: 複数カテゴリー
   name: string;
   nameJa: string;
   description: string;

@@ -222,11 +222,25 @@ export function ProductListing({ user }: ProductListingProps) {
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
-                <div
-                  className="inline-block px-3 py-1 rounded-full text-sm mb-2"
-                  style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
-                >
-                  {product.category?.name || 'Uncategorized'} / {product.category?.nameJa || '未分類'}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {product.categories && product.categories.length > 0 ? (
+                    product.categories.map(cat => (
+                      <span
+                        key={cat.id}
+                        className="inline-block px-3 py-1 rounded-full text-sm"
+                        style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
+                      >
+                        {cat.name} / {cat.nameJa}
+                      </span>
+                    ))
+                  ) : (
+                    <span
+                      className="inline-block px-3 py-1 rounded-full text-sm"
+                      style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
+                    >
+                      Uncategorized / 未分類
+                    </span>
+                  )}
                 </div>
                 <h3 className="mb-1" style={{ color: 'var(--text)' }}>
                   {product.name}

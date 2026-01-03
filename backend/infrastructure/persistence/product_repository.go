@@ -18,10 +18,12 @@ func NewProductRepository(db *gorm.DB) repository.ProductRepository {
 
 func (r *productRepository) FindAll(categorySlug, search string) ([]entity.Product, error) {
 	var products []entity.Product
-	query := r.db.Preload("Category")
+	query := r.db.Preload("Categories")
 
 	if categorySlug != "" && categorySlug != "all" {
-		query = query.Joins("JOIN categories ON categories.id = products.category_id").
+		// 多対多: product_categories中間テーブルを経由してJOIN
+		query = query.Joins("JOIN product_categories ON product_categories.product_id = products.id").
+			Joins("JOIN categories ON categories.id = product_categories.category_id").
 			Where("categories.slug = ?", categorySlug)
 	}
 
@@ -29,7 +31,7 @@ func (r *productRepository) FindAll(categorySlug, search string) ([]entity.Produ
 		query = query.Where("products.name ILIKE ? OR products.name_ja ILIKE ?", "%"+search+"%", "%"+search+"%")
 	}
 
-	if err := query.Order("created_at DESC").Find(&products).Error; err != nil {
+	if err := query.Order("products.created_at DESC").Find(&products).Error; err != nil {
 		return nil, err
 	}
 	return products, nil
@@ -37,7 +39,7 @@ func (r *productRepository) FindAll(categorySlug, search string) ([]entity.Produ
 
 func (r *productRepository) FindByID(id string) (*entity.Product, error) {
 	var product entity.Product
-	if err := r.db.Preload("Category").First(&product, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Categories").First(&product, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &product, nil
@@ -48,7 +50,18 @@ func (r *productRepository) Create(product *entity.Product) error {
 }
 
 func (r *productRepository) Update(product *entity.Product) error {
-	return r.db.Save(product).Error
+	// トランザクション内でカテゴリーの関連を更新
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 商品の基本情報を更新
+		if err := tx.Save(product).Error; err != nil {
+			return err
+		}
+		// カテゴリーの関連を置き換え
+		if err := tx.Model(product).Association("Categories").Replace(product.Categories); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *productRepository) Delete(id string) error {
