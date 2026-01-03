@@ -1,42 +1,24 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ProductListing } from './components/ProductListing';
-import { ProductDetail } from './components/ProductDetail';
-import { UserLogin } from './components/UserLogin';
-import { MyPage } from './components/MyPage';
-import { Terms } from './components/Terms';
-import { Privacy } from './components/Privacy';
-import { AuthCallback } from './components/auth/AuthCallback';
-import { AdminLogin } from './components/admin/AdminLogin';
-import { AdminAuthCallback } from './components/admin/AdminAuthCallback';
-import { AdminProductList } from './components/admin/AdminProductList';
-import { AdminProductForm } from './components/admin/AdminProductForm';
-import { AdminReviewManagement } from './components/admin/AdminReviewManagement';
 import { useState } from 'react';
 
-export interface Review {
-  id: string;
-  productId: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
+// Feature imports
+import { AuthProvider, useAuth, User } from './features/auth';
+import { Review } from './features/reviews/types';
+import { Product } from './features/products/types';
+import { ProductListing, ProductDetail } from './features/products';
+import { UserLogin, AuthCallback } from './features/auth';
+import { MyPage } from './features/users';
+import {
+  AdminLogin,
+  AdminAuthCallback,
+  AdminProductList,
+  AdminProductForm,
+  AdminReviewManagement,
+} from './features/admin';
 
-export interface Product {
-  id: string;
-  name: string;
-  nameJa: string;
-  image: string;
-  category: string;
-  categoryJa: string;
-  rating: number;
-  reviewCount: number;
-  description: string;
-  descriptionJa: string;
-}
+// Common components
+import { Terms } from './components/Terms';
+import { Privacy } from './components/Privacy';
 
 // Protected Route for Users
 function ProtectedUserRoute({ children }: { children: React.ReactNode }) {

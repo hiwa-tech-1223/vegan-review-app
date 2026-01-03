@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
-import { Admin, Product } from '../../App';
-import { mockProducts } from '../../data/mockData';
+import { Admin } from '../../auth/types';
+import { Product } from '../../products/types';
+import { mockProducts } from '../../../data/mockData';
 import { AdminHeader } from './AdminHeader';
 
 interface AdminProductListProps {
@@ -128,8 +129,8 @@ export function AdminProductList({ admin, products, setProducts }: AdminProductL
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <img 
-                        src={product.image} 
+                      <img
+                        src={product.image}
                         alt={product.name}
                         className="w-12 h-12 rounded object-cover"
                       />

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ArrowLeft, Heart, Leaf } from 'lucide-react';
-import { mockProducts, mockReviews } from '../data/mockData';
-import { User, Review } from '../App';
+import { mockProducts, mockReviews } from '../../../data/mockData';
+import { User } from '../../auth/types';
+import { Review } from '../../reviews/types';
 
 interface ProductDetailProps {
   user: User | null;
@@ -69,7 +70,7 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate(-1)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-gray-100"
               >
@@ -90,14 +91,14 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="grid md:grid-cols-2 gap-8 p-8">
             <div>
-              <img 
-                src={product.image} 
+              <img
+                src={product.image}
                 alt={product.name}
                 className="w-full h-80 object-cover rounded-xl"
               />
             </div>
             <div>
-              <div 
+              <div
                 className="inline-block px-3 py-1 rounded-full text-sm mb-4"
                 style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
               >
@@ -112,7 +113,7 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
               <div className="flex items-center gap-4 mb-6">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
-                    <span 
+                    <span
                       key={i}
                       className="text-2xl"
                       style={{ color: i < Math.floor(product.rating) ? 'var(--accent)' : '#ddd' }}
@@ -208,8 +209,8 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
             {productReviews.map(review => (
               <div key={review.id} className="border-b pb-6 last:border-b-0">
                 <div className="flex items-start gap-4">
-                  <img 
-                    src={review.userAvatar} 
+                  <img
+                    src={review.userAvatar}
                     alt={review.userName}
                     className="w-12 h-12 rounded-full object-cover"
                   />
@@ -221,7 +222,7 @@ export function ProductDetail({ user, reviews, setReviews, favorites, setFavorit
                       </div>
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
-                          <span 
+                          <span
                             key={i}
                             style={{ color: i < review.rating ? 'var(--accent)' : '#ddd' }}
                           >

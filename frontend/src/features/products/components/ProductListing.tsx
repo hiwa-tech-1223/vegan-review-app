@@ -1,38 +1,88 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Search, Leaf, User } from 'lucide-react';
-import { mockProducts } from '../data/mockData';
-import { User as UserType } from '../App';
+import { Search, Leaf, User, Loader2 } from 'lucide-react';
+import { productApi } from '../api';
+import { ApiProduct, ApiCategory } from '../types';
+import { User as UserType } from '../../auth/types';
 
 interface ProductListingProps {
   user: UserType | null;
 }
 
-const categories = [
-  { en: 'All', ja: 'すべて' },
-  { en: 'Meat Alternatives', ja: '代替肉' },
-  { en: 'Dairy', ja: '乳製品代替' },
-  { en: 'Snacks', ja: 'スナック' },
-  { en: 'Beverages', ja: '飲料' },
-  { en: 'Seasonings', ja: '調味料' }
-];
-
 export function ProductListing({ user }: ProductListingProps) {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 6;
 
-  const filteredProducts = mockProducts.filter(product => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.nameJa.includes(searchQuery);
-    return matchesCategory && matchesSearch;
-  });
+  // 初回データ取得フラグ
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  // 初回ロード: カテゴリと商品を並列で取得
+  // Promise.allで両方のAPIを同時に呼び出し、両方完了してからローディング終了
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [categoriesData, productsData] = await Promise.all([
+          productApi.getCategories(),
+          productApi.getProducts(),
+        ]);
+        setCategories(categoriesData ?? []);
+        setProducts(productsData ?? []);
+      } catch (err) {
+        setError('データの取得に失敗しました / Failed to fetch data');
+        console.error('Failed to fetch initial data:', err);
+      } finally {
+        setIsLoading(false);
+        setIsInitialLoad(false);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
+  // フィルター変更時: 商品のみ再取得（カテゴリは変わらないので取得不要）
+  // 依存配列[selectedCategory, searchQuery] → これらの値が変わるたびに再実行
+  useEffect(() => {
+    // 初回ロードは上のuseEffectで処理するのでスキップ
+    if (isInitialLoad) return;
+
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await productApi.getProducts({
+          category: selectedCategory,
+          search: searchQuery,
+        });
+        setProducts(data ?? []);
+      } catch (err) {
+        setError('商品の取得に失敗しました / Failed to fetch products');
+        console.error('Failed to fetch products:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // デバウンス処理:
+    // - 検索入力の場合: 300ms待ってからAPI呼び出し（連続入力による過剰なAPI呼び出しを防ぐ）
+    // - カテゴリ変更の場合: 即時実行（0ms）
+    const debounceTimer = setTimeout(fetchProducts, searchQuery ? 300 : 0);
+
+    // クリーンアップ関数: 次のuseEffect実行前に前のタイマーをキャンセル
+    // これにより、入力中は前の呼び出しがキャンセルされ、最後の入力後300msで1回だけAPI呼び出し
+    return () => clearTimeout(debounceTimer);
+  }, [selectedCategory, searchQuery, isInitialLoad]);
+
+  // ページネーション計算
+  const totalPages = Math.ceil(products.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  const displayedProducts = products.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
@@ -53,8 +103,8 @@ export function ProductListing({ user }: ProductListingProps) {
                   <span className="sm:hidden">Home</span>
                 </Link>
                 {user ? (
-                  <Link 
-                    to="/mypage" 
+                  <Link
+                    to="/mypage"
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base whitespace-nowrap"
                     style={{ backgroundColor: 'var(--primary)', color: 'white' }}
                   >
@@ -63,8 +113,8 @@ export function ProductListing({ user }: ProductListingProps) {
                     <span className="sm:hidden">My</span>
                   </Link>
                 ) : (
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base whitespace-nowrap"
                     style={{ backgroundColor: 'var(--primary)', color: 'white' }}
                   >
@@ -99,20 +149,35 @@ export function ProductListing({ user }: ProductListingProps) {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-6 overflow-x-auto py-4">
+            {/* All Category */}
+            <button
+              onClick={() => {
+                setSelectedCategory('all');
+                setCurrentPage(1);
+              }}
+              className="whitespace-nowrap px-4 py-2 rounded-full transition-all"
+              style={{
+                backgroundColor: selectedCategory === 'all' ? 'var(--primary)' : 'transparent',
+                color: selectedCategory === 'all' ? 'white' : 'var(--text)'
+              }}
+            >
+              All / すべて
+            </button>
+            {/* Dynamic Categories */}
             {categories.map(category => (
               <button
-                key={category.en}
+                key={category.id}
                 onClick={() => {
-                  setSelectedCategory(category.en);
+                  setSelectedCategory(category.slug);
                   setCurrentPage(1);
                 }}
                 className="whitespace-nowrap px-4 py-2 rounded-full transition-all"
                 style={{
-                  backgroundColor: selectedCategory === category.en ? 'var(--primary)' : 'transparent',
-                  color: selectedCategory === category.en ? 'white' : 'var(--text)'
+                  backgroundColor: selectedCategory === category.slug ? 'var(--primary)' : 'transparent',
+                  color: selectedCategory === category.slug ? 'white' : 'var(--text)'
                 }}
               >
-                {category.en} / {category.ja}
+                {category.name} / {category.nameJa}
               </button>
             ))}
           </div>
@@ -121,6 +186,29 @@ export function ProductListing({ user }: ProductListingProps) {
 
       {/* Product Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--primary)' }} />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <p className="text-red-500">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 rounded-full"
+              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+            >
+              Retry / 再試行
+            </button>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-20">
+            <p style={{ color: 'var(--text)' }}>
+              No products found / 商品が見つかりません
+            </p>
+          </div>
+        ) : (
+          <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedProducts.map(product => (
             <Link
@@ -128,17 +216,17 @@ export function ProductListing({ user }: ProductListingProps) {
               to={`/product/${product.id}`}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <img 
-                src={product.image} 
+              <img
+                src={product.imageUrl || 'https://placehold.co/400x300?text=No+Image'}
                 alt={product.name}
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
-                <div 
+                <div
                   className="inline-block px-3 py-1 rounded-full text-sm mb-2"
                   style={{ backgroundColor: 'var(--background)', color: 'var(--primary)' }}
                 >
-                  {product.category} / {product.categoryJa}
+                  {product.category?.name || 'Uncategorized'} / {product.category?.nameJa || '未分類'}
                 </div>
                 <h3 className="mb-1" style={{ color: 'var(--text)' }}>
                   {product.name}
@@ -149,7 +237,7 @@ export function ProductListing({ user }: ProductListingProps) {
                 <div className="flex items-center gap-2">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
-                      <span 
+                      <span
                         key={i}
                         style={{ color: i < Math.floor(product.rating) ? 'var(--accent)' : '#ddd' }}
                       >
@@ -183,6 +271,8 @@ export function ProductListing({ user }: ProductListingProps) {
               </button>
             ))}
           </div>
+        )}
+          </>
         )}
       </main>
 

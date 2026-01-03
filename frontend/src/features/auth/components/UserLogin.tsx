@@ -1,9 +1,8 @@
 import { Link, useSearchParams } from 'react-router';
 import { Leaf } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { authApi } from '../api';
 import { Navigate } from 'react-router';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function UserLogin() {
   const { user } = useAuth();
@@ -17,7 +16,7 @@ export function UserLogin() {
 
   const handleGoogleLogin = () => {
     // Redirect to backend Google OAuth endpoint
-    window.location.href = `${API_URL}/api/auth/google`;
+    window.location.href = authApi.getGoogleLoginUrl();
   };
 
   return (

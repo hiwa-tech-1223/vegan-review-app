@@ -1,8 +1,7 @@
 import { useSearchParams, Navigate } from 'react-router';
 import { Shield } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+import { useAuth } from '../../auth';
+import { authApi } from '../../auth/api';
 
 export function AdminLogin() {
   const { admin, isAdmin } = useAuth();
@@ -16,7 +15,7 @@ export function AdminLogin() {
 
   const handleGoogleLogin = () => {
     // Redirect to backend Admin Google OAuth endpoint
-    window.location.href = `${API_URL}/api/auth/admin/google`;
+    window.location.href = authApi.getAdminGoogleLoginUrl();
   };
 
   return (

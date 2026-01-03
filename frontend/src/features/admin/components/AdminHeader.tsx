@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
-import { Admin } from '../../App';
+import { Admin } from '../../auth/types';
 
 interface AdminHeaderProps {
   admin: Admin;
@@ -23,14 +23,14 @@ export function AdminHeader({ admin }: AdminHeaderProps) {
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-600">{admin.name}</span>
-            <img 
-              src={admin.avatar} 
+            <img
+              src={admin.avatar}
               alt={admin.name}
               className="w-9 h-9 rounded-full object-cover"
             />
           </div>
         </div>
-        
+
         <nav className="flex gap-6">
           <Link
             to="/admin/products"

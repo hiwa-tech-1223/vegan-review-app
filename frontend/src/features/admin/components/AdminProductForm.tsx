@@ -1,22 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Admin, Product } from '../../App';
+import { Admin } from '../../auth/types';
+import { Product } from '../../products/types';
 import { AdminHeader } from './AdminHeader';
-import { mockProducts } from '../../data/mockData';
+import { mockProducts } from '../../../data/mockData';
+import { ADMIN_CATEGORIES } from '../types';
 
 interface AdminProductFormProps {
   admin: Admin;
   products: Product[];
   setProducts: (products: Product[]) => void;
 }
-
-const categories = [
-  { en: 'Meat Alternatives', ja: '代替肉' },
-  { en: 'Dairy', ja: '乳製品代替' },
-  { en: 'Snacks', ja: 'スナック' },
-  { en: 'Beverages', ja: '飲料' },
-  { en: 'Seasonings', ja: '調味料' }
-];
 
 export function AdminProductForm({ admin, products, setProducts }: AdminProductFormProps) {
   const { id } = useParams<{ id: string }>();
@@ -51,7 +45,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
   }, [existingProduct]);
 
   const handleCategoryChange = (categoryEn: string) => {
-    const category = categories.find(c => c.en === categoryEn);
+    const category = ADMIN_CATEGORIES.find(c => c.en === categoryEn);
     if (category) {
       setFormData({
         ...formData,
@@ -140,7 +134,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
               >
-                {categories.map(category => (
+                {ADMIN_CATEGORIES.map(category => (
                   <option key={category.en} value={category.en}>
                     {category.en} / {category.ja}
                   </option>
@@ -194,8 +188,8 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
               {formData.image && (
                 <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-2">Preview:</p>
-                  <img 
-                    src={formData.image} 
+                  <img
+                    src={formData.image}
                     alt="Preview"
                     className="w-48 h-36 object-cover rounded-lg border border-gray-200"
                     onError={(e) => {

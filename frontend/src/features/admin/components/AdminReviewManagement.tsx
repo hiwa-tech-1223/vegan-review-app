@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Search, Trash2 } from 'lucide-react';
-import { Admin, Review } from '../../App';
-import { mockProducts, mockReviews } from '../../data/mockData';
+import { Admin } from '../../auth/types';
+import { Review } from '../../reviews/types';
+import { mockProducts, mockReviews } from '../../../data/mockData';
 import { AdminHeader } from './AdminHeader';
 
 interface AdminReviewManagementProps {
@@ -21,7 +22,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
 
   const filteredReviews = allReviews.filter(review => {
     const product = mockProducts.find(p => p.id === review.productId);
-    const matchesSearch = 
+    const matchesSearch =
       review.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.comment.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (product && product.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -164,8 +165,8 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
                     <td className="px-6 py-4">
                       {product && (
                         <div className="flex items-center gap-3">
-                          <img 
-                            src={product.image} 
+                          <img
+                            src={product.image}
                             alt={product.name}
                             className="w-12 h-12 rounded object-cover"
                           />
@@ -178,8 +179,8 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <img 
-                          src={review.userAvatar} 
+                        <img
+                          src={review.userAvatar}
                           alt={review.userName}
                           className="w-8 h-8 rounded-full object-cover"
                         />
@@ -189,7 +190,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
                     <td className="px-6 py-4">
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
-                          <span 
+                          <span
                             key={i}
                             className="text-yellow-500"
                             style={{ opacity: i < review.rating ? 1 : 0.2 }}

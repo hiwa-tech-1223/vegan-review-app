@@ -1,33 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  memberSince?: string;
-}
-
-export interface Admin {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  role: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  admin: Admin | null;
-  token: string | null;
-  isLoading: boolean;
-  isAdmin: boolean;
-  login: (token: string) => Promise<void>;
-  logout: () => void;
-  getAuthHeader: () => { Authorization: string } | {};
-}
+import { User, Admin, AuthContextType } from '../types';
+import { authApi } from '../api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -41,28 +14,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // トークンからユーザー情報を取得
   const fetchCurrentUser = async (authToken: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.isAdmin) {
-          setAdmin(data.user);
-          setUser(null);
-          setIsAdmin(true);
-        } else {
-          setUser(data.user);
-          setAdmin(null);
-          setIsAdmin(false);
-        }
-      } else {
-        // トークンが無効な場合
-        localStorage.removeItem('token');
-        setToken(null);
+      const data = await authApi.getCurrentUser(authToken);
+      if (data.isAdmin) {
+        setAdmin(data.user);
         setUser(null);
+        setIsAdmin(true);
+      } else {
+        setUser(data.user);
         setAdmin(null);
         setIsAdmin(false);
       }

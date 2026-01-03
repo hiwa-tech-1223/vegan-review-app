@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { Leaf, LogOut, Trash2, Edit2, X } from 'lucide-react';
-import { Review } from '../App';
-import { User } from '../contexts/AuthContext';
-import { useAuth } from '../contexts/AuthContext';
-import { mockProducts } from '../data/mockData';
+import { Review } from '../../reviews/types';
+import { User } from '../../auth/types';
+import { useAuth } from '../../auth';
+import { mockProducts } from '../../../data/mockData';
 
 interface MyPageProps {
   user: User;
@@ -46,8 +46,8 @@ export function MyPage({ user, reviews, setReviews, favorites, setFavorites }: M
               <span className="text-2xl" style={{ color: 'var(--primary)' }}>VeganBite</span>
             </Link>
             <div className="flex items-center gap-4">
-              <img 
-                src={user.avatar} 
+              <img
+                src={user.avatar}
                 alt={user.name}
                 className="w-10 h-10 rounded-full object-cover"
               />
@@ -61,8 +61,8 @@ export function MyPage({ user, reviews, setReviews, favorites, setFavorites }: M
         {/* User Info Card */}
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
           <div className="flex items-start gap-6">
-            <img 
-              src={user.avatar} 
+            <img
+              src={user.avatar}
               alt={user.name}
               className="w-24 h-24 rounded-full object-cover"
             />
@@ -137,8 +137,8 @@ export function MyPage({ user, reviews, setReviews, favorites, setFavorites }: M
                       <div key={review.id} className="border rounded-xl p-4">
                         <div className="flex gap-4">
                           <Link to={`/product/${product.id}`}>
-                            <img 
-                              src={product.image} 
+                            <img
+                              src={product.image}
                               alt={product.name}
                               className="w-24 h-24 rounded-lg object-cover"
                             />
@@ -152,7 +152,7 @@ export function MyPage({ user, reviews, setReviews, favorites, setFavorites }: M
                             <div className="flex items-center gap-2 mb-2">
                               <div className="flex">
                                 {[...Array(5)].map((_, i) => (
-                                  <span 
+                                  <span
                                     key={i}
                                     style={{ color: i < review.rating ? 'var(--accent)' : '#ddd' }}
                                   >
@@ -197,8 +197,8 @@ export function MyPage({ user, reviews, setReviews, favorites, setFavorites }: M
                   favoriteProducts.map(product => (
                     <div key={product.id} className="border rounded-xl overflow-hidden relative">
                       <Link to={`/product/${product.id}`}>
-                        <img 
-                          src={product.image} 
+                        <img
+                          src={product.image}
                           alt={product.name}
                           className="w-full h-40 object-cover"
                         />
@@ -221,7 +221,7 @@ export function MyPage({ user, reviews, setReviews, favorites, setFavorites }: M
                         <div className="flex items-center gap-2">
                           <div className="flex">
                             {[...Array(5)].map((_, i) => (
-                              <span 
+                              <span
                                 key={i}
                                 style={{ color: i < Math.floor(product.rating) ? 'var(--accent)' : '#ddd' }}
                               >

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../auth';
 
 export function AdminAuthCallback() {
   const navigate = useNavigate();
