@@ -1,14 +1,14 @@
 // 商品関連の型定義
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   nameJa: string;
   slug: string;
 }
 
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   nameJa: string;
   image: string;
@@ -22,14 +22,14 @@ export interface Product {
 
 // APIレスポンス用の型
 export interface ApiCategory {
-  id: string;
+  id: number;
   name: string;
   nameJa: string;
   slug: string;
 }
 
 export interface ApiProduct {
-  id: string;
+  id: number;
   categories: ApiCategory[];  // 多対多: 複数カテゴリー
   name: string;
   nameJa: string;

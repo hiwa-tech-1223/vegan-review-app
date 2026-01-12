@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"backend/domain/entity"
 	"backend/usecase"
@@ -42,7 +43,12 @@ func (h *ProductHandler) GetProducts(c echo.Context) error {
 
 // GetProduct - 商品詳細取得
 func (h *ProductHandler) GetProduct(c echo.Context) error {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
+	}
+
 	product, err := h.productUsecase.GetProduct(id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Product not found"})
@@ -58,7 +64,7 @@ func (h *ProductHandler) CreateProduct(c echo.Context) error {
 	}
 
 	if isAdmin := c.Get("isAdmin").(bool); isAdmin {
-		userID := c.Get("userId").(string)
+		userID := c.Get("userId").(int64)
 		product.CreatedByAdminID = &userID
 	}
 
@@ -70,7 +76,12 @@ func (h *ProductHandler) CreateProduct(c echo.Context) error {
 
 // UpdateProduct - 商品更新
 func (h *ProductHandler) UpdateProduct(c echo.Context) error {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
+	}
+
 	product, err := h.productUsecase.GetProduct(id)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "Product not found"})
@@ -81,7 +92,7 @@ func (h *ProductHandler) UpdateProduct(c echo.Context) error {
 	}
 
 	if isAdmin := c.Get("isAdmin").(bool); isAdmin {
-		userID := c.Get("userId").(string)
+		userID := c.Get("userId").(int64)
 		product.UpdatedByAdminID = &userID
 	}
 
@@ -93,7 +104,12 @@ func (h *ProductHandler) UpdateProduct(c echo.Context) error {
 
 // DeleteProduct - 商品削除
 func (h *ProductHandler) DeleteProduct(c echo.Context) error {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
+	}
+
 	if err := h.productUsecase.DeleteProduct(id); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

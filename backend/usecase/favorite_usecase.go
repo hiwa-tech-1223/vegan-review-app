@@ -17,7 +17,7 @@ func NewFavoriteUsecase(favoriteRepo repository.FavoriteRepository) *FavoriteUse
 }
 
 // GetUserFavorites - ユーザーのお気に入り一覧取得
-func (u *FavoriteUsecase) GetUserFavorites(userID, requestUserID string) ([]entity.Favorite, error) {
+func (u *FavoriteUsecase) GetUserFavorites(userID, requestUserID int64) ([]entity.Favorite, error) {
 	if userID != requestUserID {
 		return nil, errors.New("permission denied")
 	}
@@ -25,7 +25,7 @@ func (u *FavoriteUsecase) GetUserFavorites(userID, requestUserID string) ([]enti
 }
 
 // AddFavorite - お気に入り追加
-func (u *FavoriteUsecase) AddFavorite(favorite *entity.Favorite, requestUserID string) error {
+func (u *FavoriteUsecase) AddFavorite(favorite *entity.Favorite, requestUserID int64) error {
 	if favorite.UserID != requestUserID {
 		return errors.New("permission denied")
 	}
@@ -40,7 +40,7 @@ func (u *FavoriteUsecase) AddFavorite(favorite *entity.Favorite, requestUserID s
 }
 
 // RemoveFavorite - お気に入り削除
-func (u *FavoriteUsecase) RemoveFavorite(userID, productID, requestUserID string) error {
+func (u *FavoriteUsecase) RemoveFavorite(userID, productID, requestUserID int64) error {
 	if userID != requestUserID {
 		return errors.New("permission denied")
 	}

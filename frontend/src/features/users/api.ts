@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const userApi = {
   // ユーザーのお気に入り一覧を取得
-  async getFavorites(userId: string, token: string) {
+  async getFavorites(userId: number, token: string) {
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/favorites`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -17,7 +17,7 @@ export const userApi = {
   },
 
   // お気に入りに追加
-  async addFavorite(userId: string, productId: string, token: string) {
+  async addFavorite(userId: number, productId: number, token: string) {
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/favorites`, {
       method: 'POST',
       headers: {
@@ -33,7 +33,7 @@ export const userApi = {
   },
 
   // お気に入りから削除
-  async removeFavorite(userId: string, productId: string, token: string) {
+  async removeFavorite(userId: number, productId: number, token: string) {
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/favorites/${productId}`, {
       method: 'DELETE',
       headers: {
@@ -46,7 +46,7 @@ export const userApi = {
   },
 
   // ユーザーのレビュー一覧を取得
-  async getReviews(userId: string, token: string) {
+  async getReviews(userId: number, token: string) {
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/reviews`, {
       headers: {
         Authorization: `Bearer ${token}`,

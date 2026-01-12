@@ -109,7 +109,7 @@ func (h *AuthHandler) HandleAdminGoogleCallback(c echo.Context) error {
 
 // GetCurrentUser - 現在のユーザー取得
 func (h *AuthHandler) GetCurrentUser(c echo.Context) error {
-	userID := c.Get("userId").(string)
+	userID := c.Get("userId").(int64)
 	isAdmin := c.Get("isAdmin").(bool)
 
 	user, err := h.authUsecase.GetCurrentUser(userID, isAdmin)

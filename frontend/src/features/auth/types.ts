@@ -1,7 +1,7 @@
 // 認証関連の型定義
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   avatar: string;
@@ -9,7 +9,7 @@ export interface User {
 }
 
 export interface Admin {
-  id: string;
+  id: number;
   name: string;
   email: string;
   avatar: string;

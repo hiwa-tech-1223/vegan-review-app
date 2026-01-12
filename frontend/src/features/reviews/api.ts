@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const reviewApi = {
   // 商品のレビュー一覧を取得
-  async getProductReviews(productId: string): Promise<ApiReview[]> {
+  async getProductReviews(productId: number): Promise<ApiReview[]> {
     const response = await fetch(`${API_BASE_URL}/api/products/${productId}/reviews`);
     if (!response.ok) {
       throw new Error('Failed to fetch reviews');
@@ -16,7 +16,7 @@ export const reviewApi = {
 
   // レビューを投稿（認証必要）
   async createReview(
-    productId: string,
+    productId: number,
     data: { rating: number; comment: string },
     token: string
   ): Promise<ApiReview> {
@@ -36,7 +36,7 @@ export const reviewApi = {
   },
 
   // レビューを削除（認証必要）
-  async deleteReview(reviewId: string, token: string): Promise<void> {
+  async deleteReview(reviewId: number, token: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/api/reviews/${reviewId}`, {
       method: 'DELETE',
       headers: {

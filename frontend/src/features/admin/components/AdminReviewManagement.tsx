@@ -14,7 +14,7 @@ interface AdminReviewManagementProps {
 export function AdminReviewManagement({ admin, reviews, setReviews }: AdminReviewManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRating, setSelectedRating] = useState('All');
-  const [selectedReviews, setSelectedReviews] = useState<string[]>([]);
+  const [selectedReviews, setSelectedReviews] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -42,7 +42,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
     }
   };
 
-  const handleSelectReview = (reviewId: string, checked: boolean) => {
+  const handleSelectReview = (reviewId: number, checked: boolean) => {
     if (checked) {
       setSelectedReviews([...selectedReviews, reviewId]);
     } else {
@@ -50,7 +50,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
     }
   };
 
-  const handleDeleteReview = (reviewId: string) => {
+  const handleDeleteReview = (reviewId: number) => {
     if (confirm('Are you sure you want to delete this review?')) {
       setReviews(reviews.filter(r => r.id !== reviewId));
     }

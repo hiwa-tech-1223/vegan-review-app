@@ -21,12 +21,12 @@ func NewReviewUsecase(reviewRepo repository.ReviewRepository, productRepo reposi
 }
 
 // GetProductReviews - 商品のレビュー一覧取得
-func (u *ReviewUsecase) GetProductReviews(productID string) ([]entity.Review, error) {
+func (u *ReviewUsecase) GetProductReviews(productID int64) ([]entity.Review, error) {
 	return u.reviewRepo.FindByProductID(productID)
 }
 
 // GetUserReviews - ユーザーのレビュー一覧取得
-func (u *ReviewUsecase) GetUserReviews(userID string) ([]entity.Review, error) {
+func (u *ReviewUsecase) GetUserReviews(userID int64) ([]entity.Review, error) {
 	return u.reviewRepo.FindByUserID(userID)
 }
 
@@ -47,7 +47,7 @@ func (u *ReviewUsecase) CreateReview(review *entity.Review) error {
 }
 
 // DeleteReview - レビュー削除
-func (u *ReviewUsecase) DeleteReview(id, userID string, isAdmin bool) error {
+func (u *ReviewUsecase) DeleteReview(id, userID int64, isAdmin bool) error {
 	review, err := u.reviewRepo.FindByID(id)
 	if err != nil {
 		return errors.New("review not found")
@@ -68,7 +68,7 @@ func (u *ReviewUsecase) DeleteReview(id, userID string, isAdmin bool) error {
 }
 
 // updateProductRating - 商品の評価を更新
-func (u *ReviewUsecase) updateProductRating(productID string) error {
+func (u *ReviewUsecase) updateProductRating(productID int64) error {
 	avg, count, err := u.reviewRepo.GetProductRatingStats(productID)
 	if err != nil {
 		return err

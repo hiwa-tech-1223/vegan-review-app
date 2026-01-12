@@ -4,7 +4,7 @@ import "time"
 
 // Admin - 管理者
 type Admin struct {
-	ID        string    `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	ID        int64     `json:"id" gorm:"primaryKey;autoIncrement"`
 	GoogleID  string    `json:"googleId" gorm:"uniqueIndex"`
 	Email     string    `json:"email" gorm:"uniqueIndex"`
 	Name      string    `json:"name"`
@@ -16,7 +16,7 @@ type Admin struct {
 
 // User - 一般ユーザー
 type User struct {
-	ID          string    `json:"id" gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	ID          int64     `json:"id" gorm:"primaryKey;autoIncrement"`
 	GoogleID    string    `json:"googleId" gorm:"uniqueIndex"`
 	Email       string    `json:"email" gorm:"uniqueIndex"`
 	Name        string    `json:"name"`

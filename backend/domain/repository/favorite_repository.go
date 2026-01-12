@@ -4,8 +4,8 @@ import "backend/domain/entity"
 
 // FavoriteRepository - お気に入りリポジトリインターフェース
 type FavoriteRepository interface {
-	FindByUserID(userID string) ([]entity.Favorite, error)
-	FindByUserIDAndProductID(userID, productID string) (*entity.Favorite, error)
+	FindByUserID(userID int64) ([]entity.Favorite, error)
+	FindByUserIDAndProductID(userID, productID int64) (*entity.Favorite, error)
 	Create(favorite *entity.Favorite) error
-	Delete(userID, productID string) error
+	Delete(userID, productID int64) error
 }

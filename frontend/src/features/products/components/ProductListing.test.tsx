@@ -16,14 +16,14 @@ vi.mock('../api', () => ({
 
 // テスト用データ
 const mockCategories: ApiCategory[] = [
-  { id: 'cat-1', name: 'Meat Alternatives', nameJa: '代替肉', slug: 'meat-alternatives' },
-  { id: 'cat-2', name: 'Dairy Alternatives', nameJa: '乳製品代替', slug: 'dairy-alternatives' },
-  { id: 'cat-3', name: 'Snacks', nameJa: 'スナック', slug: 'snacks' },
+  { id: 1, name: 'Meat Alternatives', nameJa: '代替肉', slug: 'meat-alternatives' },
+  { id: 2, name: 'Dairy Alternatives', nameJa: '乳製品代替', slug: 'dairy-alternatives' },
+  { id: 3, name: 'Snacks', nameJa: 'スナック', slug: 'snacks' },
 ];
 
 const mockProducts: ApiProduct[] = [
   {
-    id: 'prod-1',
+    id: 1,
     name: 'Beyond Burger',
     nameJa: 'ビヨンドバーガー',
     description: 'Plant-based burger',
@@ -37,7 +37,7 @@ const mockProducts: ApiProduct[] = [
     updatedAt: '2024-01-01T00:00:00Z',
   },
   {
-    id: 'prod-2',
+    id: 2,
     name: 'Oat Milk',
     nameJa: 'オーツミルク',
     description: 'Creamy oat milk',
@@ -51,7 +51,7 @@ const mockProducts: ApiProduct[] = [
     updatedAt: '2024-01-02T00:00:00Z',
   },
   {
-    id: 'prod-3',
+    id: 3,
     name: 'Vegan Cheese',
     nameJa: 'ヴィーガンチーズ',
     description: 'Dairy-free cheese',
@@ -68,7 +68,7 @@ const mockProducts: ApiProduct[] = [
 
 // 7件以上のモックデータ（ページネーションテスト用）
 const mockManyProducts: ApiProduct[] = Array.from({ length: 8 }, (_, i) => ({
-  id: `prod-${i + 1}`,
+  id: i + 1,
   name: `Product ${i + 1}`,
   nameJa: `商品 ${i + 1}`,
   description: `Description ${i + 1}`,
@@ -382,7 +382,7 @@ describe('ProductListing', () => {
     it('カテゴリーのない商品は「Uncategorized」を表示する', async () => {
       const productWithoutCategory: ApiProduct = {
         ...mockProducts[0],
-        id: 'no-cat',
+        id: 100,
         name: 'No Category Product',
         nameJa: 'カテゴリーなし商品',
         categories: [],
@@ -406,7 +406,7 @@ describe('ProductListing', () => {
       });
 
       const burgerLink = screen.getByText('Beyond Burger').closest('a');
-      expect(burgerLink).toHaveAttribute('href', '/product/prod-1');
+      expect(burgerLink).toHaveAttribute('href', '/product/1');
     });
 
     it('商品の評価を星で表示する', async () => {
@@ -437,11 +437,10 @@ describe('ProductListing', () => {
 
     it('ログイン時は「My Page」リンクを表示する', async () => {
       const loggedInUser = {
-        id: 'user-1',
+        id: 1,
         email: 'test@example.com',
         name: 'Test User',
         avatar: 'https://example.com/avatar.jpg',
-        provider: 'google' as const,
       };
 
       render(<ProductListing user={loggedInUser} />);

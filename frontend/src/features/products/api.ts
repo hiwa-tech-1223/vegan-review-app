@@ -35,7 +35,7 @@ export const productApi = {
   },
 
   // 商品詳細を取得
-  async getProduct(id: string): Promise<ApiProduct> {
+  async getProduct(id: number): Promise<ApiProduct> {
     const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
     if (!response.ok) {
       throw new Error('Failed to fetch product');

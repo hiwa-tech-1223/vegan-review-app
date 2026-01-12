@@ -3,9 +3,9 @@
 import { ApiProduct } from '../products/types';
 
 export interface Review {
-  id: string;
-  productId: string;
-  userId: string;
+  id: number;
+  productId: number;
+  userId: number;
   userName: string;
   userAvatar: string;
   rating: number;
@@ -15,11 +15,11 @@ export interface Review {
 
 // APIレスポンス用の型
 export interface ApiReview {
-  id: string;
-  productId: string;
-  userId: string;
+  id: number;
+  productId: number;
+  userId: number;
   user: {
-    id: string;
+    id: number;
     name: string;
     avatar: string;
   } | null;

@@ -38,7 +38,7 @@ export function ProductDetail() {
       setIsLoadingProduct(true);
       setProductError(null);
       try {
-        const data = await productApi.getProduct(id);
+        const data = await productApi.getProduct(Number(id));
         setProduct(data);
       } catch (err) {
         setProductError('商品の取得に失敗しました / Failed to fetch product');
@@ -56,7 +56,7 @@ export function ProductDetail() {
       if (!id) return;
       setIsLoadingReviews(true);
       try {
-        const data = await reviewApi.getProductReviews(id);
+        const data = await reviewApi.getProductReviews(Number(id));
         setReviews(data ?? []);
       } catch (err) {
         console.error('Failed to fetch reviews:', err);
@@ -74,7 +74,7 @@ export function ProductDetail() {
       if (!user || !token || !id) return;
       try {
         const favorites = await userApi.getFavorites(user.id, token);
-        const isFav = favorites?.some((f: { productId: string }) => f.productId === id) ?? false;
+        const isFav = favorites?.some((f: { productId: number }) => f.productId === Number(id)) ?? false;
         setIsFavorite(isFav);
       } catch (err) {
         console.error('Failed to fetch favorites:', err);
@@ -95,7 +95,7 @@ export function ProductDetail() {
     setIsSubmittingReview(true);
     setReviewError(null);
     try {
-      const newReview = await reviewApi.createReview(id, { rating, comment }, token);
+      const newReview = await reviewApi.createReview(Number(id), { rating, comment }, token);
       setReviews([newReview, ...reviews]);
       setComment('');
       setRating(5);
@@ -119,10 +119,10 @@ export function ProductDetail() {
     setIsTogglingFavorite(true);
     try {
       if (isFavorite) {
-        await userApi.removeFavorite(user.id, id, token);
+        await userApi.removeFavorite(user.id, Number(id), token);
         setIsFavorite(false);
       } else {
-        await userApi.addFavorite(user.id, id, token);
+        await userApi.addFavorite(user.id, Number(id), token);
         setIsFavorite(true);
       }
     } catch (err) {

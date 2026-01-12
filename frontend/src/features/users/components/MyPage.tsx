@@ -45,7 +45,7 @@ export function MyPage() {
     navigate('/');
   };
 
-  const handleDeleteReview = async (reviewId: string) => {
+  const handleDeleteReview = async (reviewId: number) => {
     if (!token) return;
     try {
       await reviewApi.deleteReview(reviewId, token);
@@ -56,7 +56,7 @@ export function MyPage() {
     }
   };
 
-  const handleRemoveFavorite = async (productId: string) => {
+  const handleRemoveFavorite = async (productId: number) => {
     if (!user || !token) return;
     try {
       await userApi.removeFavorite(user.id, productId, token);

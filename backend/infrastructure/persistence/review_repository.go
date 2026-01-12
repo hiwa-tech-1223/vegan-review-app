@@ -16,7 +16,7 @@ func NewReviewRepository(db *gorm.DB) repository.ReviewRepository {
 	return &reviewRepository{db: db}
 }
 
-func (r *reviewRepository) FindByProductID(productID string) ([]entity.Review, error) {
+func (r *reviewRepository) FindByProductID(productID int64) ([]entity.Review, error) {
 	var reviews []entity.Review
 	if err := r.db.Preload("User").Where("product_id = ?", productID).Order("created_at DESC").Find(&reviews).Error; err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (r *reviewRepository) FindByProductID(productID string) ([]entity.Review, e
 	return reviews, nil
 }
 
-func (r *reviewRepository) FindByUserID(userID string) ([]entity.Review, error) {
+func (r *reviewRepository) FindByUserID(userID int64) ([]entity.Review, error) {
 	var reviews []entity.Review
 	if err := r.db.Preload("Product").Preload("Product.Categories").Where("user_id = ?", userID).Order("created_at DESC").Find(&reviews).Error; err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (r *reviewRepository) FindByUserID(userID string) ([]entity.Review, error) 
 	return reviews, nil
 }
 
-func (r *reviewRepository) FindByID(id string) (*entity.Review, error) {
+func (r *reviewRepository) FindByID(id int64) (*entity.Review, error) {
 	var review entity.Review
 	if err := r.db.First(&review, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (r *reviewRepository) FindByID(id string) (*entity.Review, error) {
 	return &review, nil
 }
 
-func (r *reviewRepository) FindByProductIDAndUserID(productID, userID string) (*entity.Review, error) {
+func (r *reviewRepository) FindByProductIDAndUserID(productID, userID int64) (*entity.Review, error) {
 	var review entity.Review
 	if err := r.db.Where("product_id = ? AND user_id = ?", productID, userID).First(&review).Error; err != nil {
 		return nil, err
@@ -56,11 +56,11 @@ func (r *reviewRepository) Create(review *entity.Review) error {
 	return r.db.Preload("User").First(review, "id = ?", review.ID).Error
 }
 
-func (r *reviewRepository) Delete(id string) error {
+func (r *reviewRepository) Delete(id int64) error {
 	return r.db.Delete(&entity.Review{}, "id = ?", id).Error
 }
 
-func (r *reviewRepository) GetProductRatingStats(productID string) (float64, int64, error) {
+func (r *reviewRepository) GetProductRatingStats(productID int64) (float64, int64, error) {
 	var result struct {
 		Avg   float64
 		Count int64

@@ -16,7 +16,7 @@ func NewFavoriteRepository(db *gorm.DB) repository.FavoriteRepository {
 	return &favoriteRepository{db: db}
 }
 
-func (r *favoriteRepository) FindByUserID(userID string) ([]entity.Favorite, error) {
+func (r *favoriteRepository) FindByUserID(userID int64) ([]entity.Favorite, error) {
 	var favorites []entity.Favorite
 	if err := r.db.Preload("Product").Preload("Product.Categories").Where("user_id = ?", userID).Find(&favorites).Error; err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (r *favoriteRepository) FindByUserID(userID string) ([]entity.Favorite, err
 	return favorites, nil
 }
 
-func (r *favoriteRepository) FindByUserIDAndProductID(userID, productID string) (*entity.Favorite, error) {
+func (r *favoriteRepository) FindByUserIDAndProductID(userID, productID int64) (*entity.Favorite, error) {
 	var favorite entity.Favorite
 	if err := r.db.Where("user_id = ? AND product_id = ?", userID, productID).First(&favorite).Error; err != nil {
 		return nil, err
@@ -36,6 +36,6 @@ func (r *favoriteRepository) Create(favorite *entity.Favorite) error {
 	return r.db.Create(favorite).Error
 }
 
-func (r *favoriteRepository) Delete(userID, productID string) error {
+func (r *favoriteRepository) Delete(userID, productID int64) error {
 	return r.db.Where("user_id = ? AND product_id = ?", userID, productID).Delete(&entity.Favorite{}).Error
 }

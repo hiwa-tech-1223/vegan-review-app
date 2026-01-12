@@ -64,7 +64,7 @@ func (u *AuthUsecase) FindAndUpdateAdmin(googleUserInfo *entity.GoogleUserInfo) 
 }
 
 // GetCurrentUser - 現在のユーザー取得
-func (u *AuthUsecase) GetCurrentUser(userID string, isAdmin bool) (interface{}, error) {
+func (u *AuthUsecase) GetCurrentUser(userID int64, isAdmin bool) (interface{}, error) {
 	if isAdmin {
 		return u.adminRepo.FindByID(userID)
 	}

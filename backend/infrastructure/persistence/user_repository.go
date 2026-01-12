@@ -16,7 +16,7 @@ func NewUserRepository(db *gorm.DB) repository.UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) FindByID(id string) (*entity.User, error) {
+func (r *userRepository) FindByID(id int64) (*entity.User, error) {
 	var user entity.User
 	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func NewAdminRepository(db *gorm.DB) repository.AdminRepository {
 	return &adminRepository{db: db}
 }
 
-func (r *adminRepository) FindByID(id string) (*entity.Admin, error) {
+func (r *adminRepository) FindByID(id int64) (*entity.Admin, error) {
 	var admin entity.Admin
 	if err := r.db.First(&admin, "id = ?", id).Error; err != nil {
 		return nil, err

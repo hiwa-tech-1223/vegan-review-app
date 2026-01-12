@@ -37,7 +37,7 @@ func (r *productRepository) FindAll(categorySlug, search string) ([]entity.Produ
 	return products, nil
 }
 
-func (r *productRepository) FindByID(id string) (*entity.Product, error) {
+func (r *productRepository) FindByID(id int64) (*entity.Product, error) {
 	var product entity.Product
 	if err := r.db.Preload("Categories").First(&product, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -64,11 +64,11 @@ func (r *productRepository) Update(product *entity.Product) error {
 	})
 }
 
-func (r *productRepository) Delete(id string) error {
+func (r *productRepository) Delete(id int64) error {
 	return r.db.Delete(&entity.Product{}, "id = ?", id).Error
 }
 
-func (r *productRepository) UpdateRating(productID string, rating float64, count int) error {
+func (r *productRepository) UpdateRating(productID int64, rating float64, count int) error {
 	return r.db.Model(&entity.Product{}).Where("id = ?", productID).Updates(map[string]interface{}{
 		"rating":       rating,
 		"review_count": count,

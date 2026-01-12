@@ -14,7 +14,7 @@ vi.mock('react-router', async () => {
   const actual = await vi.importActual('react-router');
   return {
     ...actual,
-    useParams: () => ({ id: 'prod-1' }),
+    useParams: () => ({ id: '1' }),
     useNavigate: () => mockNavigate,
   };
 });
@@ -49,7 +49,7 @@ vi.mock('../../auth', () => ({
 
 // テストデータ
 const mockProduct: ApiProduct = {
-  id: 'prod-1',
+  id: 1,
   name: 'Beyond Burger',
   nameJa: 'ビヨンドバーガー',
   description: 'Plant-based burger patty',
@@ -57,8 +57,8 @@ const mockProduct: ApiProduct = {
   imageUrl: 'https://example.com/burger.jpg',
   affiliateUrl: null,
   categories: [
-    { id: 'cat-1', name: 'Meat Alternatives', nameJa: '代替肉', slug: 'meat-alternatives' },
-    { id: 'cat-2', name: 'Snacks', nameJa: 'スナック', slug: 'snacks' },
+    { id: 1, name: 'Meat Alternatives', nameJa: '代替肉', slug: 'meat-alternatives' },
+    { id: 2, name: 'Snacks', nameJa: 'スナック', slug: 'snacks' },
   ],
   rating: 4.5,
   reviewCount: 120,
@@ -68,31 +68,32 @@ const mockProduct: ApiProduct = {
 
 const mockReviews = [
   {
-    id: 'review-1',
-    productId: 'prod-1',
-    userId: 'user-2',
+    id: 1,
+    productId: 1,
+    userId: 2,
     rating: 5,
     comment: 'Great product!',
     createdAt: '2024-01-15T00:00:00Z',
-    user: { id: 'user-2', name: 'John Doe', avatar: 'https://example.com/avatar.jpg' },
+    updatedAt: '2024-01-15T00:00:00Z',
+    user: { id: 2, name: 'John Doe', avatar: 'https://example.com/avatar.jpg' },
   },
   {
-    id: 'review-2',
-    productId: 'prod-1',
-    userId: 'user-3',
+    id: 2,
+    productId: 1,
+    userId: 3,
     rating: 4,
     comment: 'Pretty good',
     createdAt: '2024-01-10T00:00:00Z',
-    user: { id: 'user-3', name: 'Jane Smith', avatar: null },
+    updatedAt: '2024-01-10T00:00:00Z',
+    user: { id: 3, name: 'Jane Smith', avatar: 'https://example.com/avatar2.jpg' },
   },
 ];
 
 const mockUser = {
-  id: 'user-1',
+  id: 1,
   email: 'test@example.com',
   name: 'Test User',
   avatar: 'https://example.com/avatar.jpg',
-  provider: 'google' as const,
 };
 
 describe('ProductDetail', () => {
@@ -213,7 +214,7 @@ describe('ProductDetail', () => {
 
     it('ログイン時にお気に入りに追加できる', async () => {
       mockUseAuth.mockReturnValue({ user: mockUser, token: 'test-token' });
-      vi.mocked(userApi.addFavorite).mockResolvedValue({ id: 'fav-1', productId: 'prod-1' });
+      vi.mocked(userApi.addFavorite).mockResolvedValue({ id: 1, productId: 1 });
       const user = userEvent.setup();
 
       render(<ProductDetail />);
@@ -226,7 +227,7 @@ describe('ProductDetail', () => {
       await user.click(favoriteButton);
 
       await waitFor(() => {
-        expect(userApi.addFavorite).toHaveBeenCalledWith('user-1', 'prod-1', 'test-token');
+        expect(userApi.addFavorite).toHaveBeenCalledWith(1, 1, 'test-token');
       });
 
       // ボタンのテキストが変わる
@@ -237,7 +238,7 @@ describe('ProductDetail', () => {
 
     it('お気に入り済みの場合は解除できる', async () => {
       mockUseAuth.mockReturnValue({ user: mockUser, token: 'test-token' });
-      vi.mocked(userApi.getFavorites).mockResolvedValue([{ productId: 'prod-1' }]);
+      vi.mocked(userApi.getFavorites).mockResolvedValue([{ productId: 1 }]);
       vi.mocked(userApi.removeFavorite).mockResolvedValue(undefined);
       const user = userEvent.setup();
 
@@ -251,7 +252,7 @@ describe('ProductDetail', () => {
       await user.click(favoriteButton);
 
       await waitFor(() => {
-        expect(userApi.removeFavorite).toHaveBeenCalledWith('user-1', 'prod-1', 'test-token');
+        expect(userApi.removeFavorite).toHaveBeenCalledWith(1, 1, 'test-token');
       });
     });
   });
@@ -281,13 +282,14 @@ describe('ProductDetail', () => {
     it('ログイン時にレビューを投稿できる', async () => {
       mockUseAuth.mockReturnValue({ user: mockUser, token: 'test-token' });
       const newReview = {
-        id: 'review-new',
-        productId: 'prod-1',
-        userId: 'user-1',
+        id: 100,
+        productId: 1,
+        userId: 1,
         rating: 5,
         comment: 'Amazing!',
         createdAt: new Date().toISOString(),
-        user: mockUser,
+        updatedAt: new Date().toISOString(),
+        user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
       };
       vi.mocked(reviewApi.createReview).mockResolvedValue(newReview);
       const user = userEvent.setup();
@@ -308,7 +310,7 @@ describe('ProductDetail', () => {
 
       await waitFor(() => {
         expect(reviewApi.createReview).toHaveBeenCalledWith(
-          'prod-1',
+          1,
           { rating: 5, comment: 'Amazing!' },
           'test-token'
         );
@@ -336,13 +338,14 @@ describe('ProductDetail', () => {
     it('評価を変更できる', async () => {
       mockUseAuth.mockReturnValue({ user: mockUser, token: 'test-token' });
       vi.mocked(reviewApi.createReview).mockResolvedValue({
-        id: 'review-new',
-        productId: 'prod-1',
-        userId: 'user-1',
+        id: 101,
+        productId: 1,
+        userId: 1,
         rating: 3,
         comment: 'OK',
         createdAt: new Date().toISOString(),
-        user: mockUser,
+        updatedAt: new Date().toISOString(),
+        user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
       });
       const user = userEvent.setup();
 
@@ -372,7 +375,7 @@ describe('ProductDetail', () => {
 
       await waitFor(() => {
         expect(reviewApi.createReview).toHaveBeenCalledWith(
-          'prod-1',
+          1,
           { rating: 3, comment: 'OK' },
           'test-token'
         );

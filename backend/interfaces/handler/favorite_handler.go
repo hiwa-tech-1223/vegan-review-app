@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"backend/domain/entity"
 	"backend/usecase"
@@ -21,8 +22,12 @@ func NewFavoriteHandler(favoriteUsecase *usecase.FavoriteUsecase) *FavoriteHandl
 
 // GetUserFavorites - ユーザーのお気に入り一覧取得
 func (h *FavoriteHandler) GetUserFavorites(c echo.Context) error {
-	userID := c.Param("id")
-	requestUserID := c.Get("userId").(string)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+	}
+	requestUserID := c.Get("userId").(int64)
 
 	favorites, err := h.favoriteUsecase.GetUserFavorites(userID, requestUserID)
 	if err != nil {
@@ -36,8 +41,12 @@ func (h *FavoriteHandler) GetUserFavorites(c echo.Context) error {
 
 // AddFavorite - お気に入り追加
 func (h *FavoriteHandler) AddFavorite(c echo.Context) error {
-	userID := c.Param("id")
-	requestUserID := c.Get("userId").(string)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+	}
+	requestUserID := c.Get("userId").(int64)
 
 	favorite := new(entity.Favorite)
 	if err := c.Bind(favorite); err != nil {
@@ -60,9 +69,17 @@ func (h *FavoriteHandler) AddFavorite(c echo.Context) error {
 
 // RemoveFavorite - お気に入り削除
 func (h *FavoriteHandler) RemoveFavorite(c echo.Context) error {
-	userID := c.Param("id")
-	productID := c.Param("productId")
-	requestUserID := c.Get("userId").(string)
+	userIDStr := c.Param("id")
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+	}
+	productIDStr := c.Param("productId")
+	productID, err := strconv.ParseInt(productIDStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
+	}
+	requestUserID := c.Get("userId").(int64)
 
 	if err := h.favoriteUsecase.RemoveFavorite(userID, productID, requestUserID); err != nil {
 		if err.Error() == "permission denied" {

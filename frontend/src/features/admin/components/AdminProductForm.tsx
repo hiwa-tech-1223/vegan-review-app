@@ -18,7 +18,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
   const isEditMode = !!id;
 
   const allProducts = products.length > 0 ? products : mockProducts;
-  const existingProduct = id ? allProducts.find(p => p.id === id) : null;
+  const existingProduct = id ? allProducts.find(p => p.id === Number(id)) : null;
 
   const [formData, setFormData] = useState({
     nameJa: '',
@@ -61,7 +61,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
     if (isEditMode && existingProduct) {
       // Update existing product
       const updatedProducts = allProducts.map(p =>
-        p.id === id
+        p.id === Number(id)
           ? {
               ...p,
               ...formData
@@ -72,7 +72,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
     } else {
       // Create new product
       const newProduct: Product = {
-        id: `${Date.now()}`,
+        id: Date.now(),
         ...formData,
         rating: 0,
         reviewCount: 0

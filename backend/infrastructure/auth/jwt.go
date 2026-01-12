@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -8,7 +9,7 @@ import (
 
 // JWTClaims - JWTのペイロード
 type JWTClaims struct {
-	UserID  string `json:"userId"`
+	UserID  int64  `json:"userId"`
 	Email   string `json:"email"`
 	Name    string `json:"name"`
 	Avatar  string `json:"avatar"`
@@ -28,7 +29,7 @@ func NewJWTService(secret string) *JWTService {
 }
 
 // GenerateToken - JWTトークン生成
-func (s *JWTService) GenerateToken(userID, email, name, avatar string, isAdmin bool, role string) (string, error) {
+func (s *JWTService) GenerateToken(userID int64, email, name, avatar string, isAdmin bool, role string) (string, error) {
 	claims := JWTClaims{
 		UserID:  userID,
 		Email:   email,
@@ -39,6 +40,7 @@ func (s *JWTService) GenerateToken(userID, email, name, avatar string, isAdmin b
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Subject:   strconv.FormatInt(userID, 10),
 		},
 	}
 

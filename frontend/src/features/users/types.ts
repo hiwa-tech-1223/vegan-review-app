@@ -4,17 +4,17 @@
 import { ApiProduct } from '../products/types';
 
 export interface UserFavorite {
-  id: string;
-  userId: string;
-  productId: string;
+  id: number;
+  userId: number;
+  productId: number;
   createdAt: string;
 }
 
 // お気に入り一覧取得時のレスポンス型（商品情報含む）
 export interface ApiFavorite {
-  id: string;
-  userId: string;
-  productId: string;
+  id: number;
+  userId: number;
+  productId: number;
   product: ApiProduct;
   createdAt: string;
 }

@@ -25,7 +25,7 @@ func (u *ProductUsecase) GetAllProducts(categorySlug, search string) ([]entity.P
 }
 
 // GetProduct - 商品詳細取得
-func (u *ProductUsecase) GetProduct(id string) (*entity.Product, error) {
+func (u *ProductUsecase) GetProduct(id int64) (*entity.Product, error) {
 	return u.productRepo.FindByID(id)
 }
 
@@ -40,7 +40,7 @@ func (u *ProductUsecase) UpdateProduct(product *entity.Product) error {
 }
 
 // DeleteProduct - 商品削除
-func (u *ProductUsecase) DeleteProduct(id string) error {
+func (u *ProductUsecase) DeleteProduct(id int64) error {
 	return u.productRepo.Delete(id)
 }
 
