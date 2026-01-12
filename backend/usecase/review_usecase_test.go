@@ -9,12 +9,13 @@ import (
 // ===== Mock Repositories =====
 
 type mockReviewRepository struct {
-	reviews                  []entity.Review
-	findByIDFunc             func(id int64) (*entity.Review, error)
+	reviews                    []entity.Review
+	findByIDFunc               func(id int64) (*entity.Review, error)
 	findByProductIDAndUserFunc func(productID, userID int64) (*entity.Review, error)
-	createFunc               func(review *entity.Review) error
-	deleteFunc               func(id int64) error
-	getRatingStatsFunc       func(productID int64) (float64, int64, error)
+	createFunc                 func(review *entity.Review) error
+	updateFunc                 func(review *entity.Review) error
+	deleteFunc                 func(id int64) error
+	getRatingStatsFunc         func(productID int64) (float64, int64, error)
 }
 
 func (m *mockReviewRepository) FindByProductID(productID int64) ([]entity.Review, error) {
@@ -59,6 +60,13 @@ func (m *mockReviewRepository) FindByProductIDAndUserID(productID, userID int64)
 func (m *mockReviewRepository) Create(review *entity.Review) error {
 	if m.createFunc != nil {
 		return m.createFunc(review)
+	}
+	return nil
+}
+
+func (m *mockReviewRepository) Update(review *entity.Review) error {
+	if m.updateFunc != nil {
+		return m.updateFunc(review)
 	}
 	return nil
 }
@@ -390,4 +398,125 @@ func TestReviewUsecase_GetUserReviews(t *testing.T) {
 			t.Errorf("expected 2 reviews, got %d", len(reviews))
 		}
 	})
+}
+
+func TestReviewUsecase_UpdateReview(t *testing.T) {
+	testCases := []struct {
+		name             string
+		reviewID         int64
+		requestUserID    int64
+		rating           int
+		comment          string
+		existingReview   *entity.Review
+		updateErr        error
+		wantErr          string
+		wantRatingUpdate bool
+	}{
+		{
+			name:          "自分のレビューを更新できる",
+			reviewID:      1,
+			requestUserID: 1,
+			rating:        4,
+			comment:       "Updated comment",
+			existingReview: &entity.Review{
+				ID:        1,
+				ProductID: 1,
+				UserID:    1,
+				Rating:    5,
+				Comment:   "Original comment",
+			},
+			wantErr:          "",
+			wantRatingUpdate: true,
+		},
+		{
+			name:          "他人のレビューは更新できない",
+			reviewID:      1,
+			requestUserID: 2,
+			rating:        4,
+			comment:       "Trying to update",
+			existingReview: &entity.Review{
+				ID:        1,
+				ProductID: 1,
+				UserID:    1,
+			},
+			wantErr:          "permission denied",
+			wantRatingUpdate: false,
+		},
+		{
+			name:             "存在しないレビューは更新できない",
+			reviewID:         999,
+			requestUserID:    1,
+			rating:           4,
+			comment:          "Non-existent",
+			existingReview:   nil,
+			wantErr:          "review not found",
+			wantRatingUpdate: false,
+		},
+		{
+			name:          "リポジトリエラー時はエラーを返す",
+			reviewID:      1,
+			requestUserID: 1,
+			rating:        4,
+			comment:       "Update error",
+			existingReview: &entity.Review{
+				ID:        1,
+				ProductID: 1,
+				UserID:    1,
+			},
+			updateErr:        errors.New("database error"),
+			wantErr:          "database error",
+			wantRatingUpdate: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockReviewRepo := &mockReviewRepository{
+				findByIDFunc: func(id int64) (*entity.Review, error) {
+					if tc.existingReview != nil && tc.existingReview.ID == id {
+						return tc.existingReview, nil
+					}
+					return nil, errors.New("not found")
+				},
+				updateFunc: func(review *entity.Review) error {
+					return tc.updateErr
+				},
+			}
+			mockProductRepo := &mockProductRepository{}
+			usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+
+			review, err := usecase.UpdateReview(tc.reviewID, tc.requestUserID, tc.rating, tc.comment)
+
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Errorf("expected error %q, got nil", tc.wantErr)
+					return
+				}
+				if err.Error() != tc.wantErr {
+					t.Errorf("expected error %q, got %q", tc.wantErr, err.Error())
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			// 更新後のレビューの値を確認
+			if review.Rating != tc.rating {
+				t.Errorf("expected rating %d, got %d", tc.rating, review.Rating)
+			}
+			if review.Comment != tc.comment {
+				t.Errorf("expected comment %q, got %q", tc.comment, review.Comment)
+			}
+
+			// 評価更新が呼ばれたか確認
+			if tc.wantRatingUpdate {
+				if len(mockProductRepo.updateRatingCalls) == 0 {
+					t.Error("expected UpdateRating to be called, but it wasn't")
+				}
+			}
+		})
+	}
 }

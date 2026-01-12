@@ -32,6 +32,10 @@ export function ProductDetail() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
 
+  // 編集モード（既存レビューがある場合）
+  const [existingUserReview, setExistingUserReview] = useState<ApiReview | null>(null);
+  const isEditMode = existingUserReview !== null;
+
   // 商品詳細を取得
   useEffect(() => {
     const fetchProduct = async () => {
@@ -52,6 +56,7 @@ export function ProductDetail() {
   }, [id]);
 
   // レビュー一覧を取得
+  const userId = user?.id;
   useEffect(() => {
     const fetchReviews = async () => {
       if (!id) return;
@@ -59,6 +64,18 @@ export function ProductDetail() {
       try {
         const data = await reviewApi.getProductReviews(Number(id));
         setReviews(data ?? []);
+
+        // ログインユーザーの既存レビューをチェック
+        if (userId) {
+          const userReview = data?.find(r => r.userId === userId);
+          if (userReview) {
+            setExistingUserReview(userReview);
+            setRating(userReview.rating);
+            setComment(userReview.comment);
+          } else {
+            setExistingUserReview(null);
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch reviews:', err);
         setReviews([]);
@@ -67,7 +84,7 @@ export function ProductDetail() {
       }
     };
     fetchReviews();
-  }, [id]);
+  }, [id, userId]);
 
   // お気に入り状態を取得
   useEffect(() => {
@@ -84,7 +101,7 @@ export function ProductDetail() {
     fetchFavorites();
   }, [user, token, id]);
 
-  // レビュー投稿
+  // レビュー投稿/更新
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !token) {
@@ -96,10 +113,27 @@ export function ProductDetail() {
     setIsSubmittingReview(true);
     setReviewError(null);
     try {
-      const newReview = await reviewApi.createReview(Number(id), { rating, comment }, token);
-      setReviews([newReview, ...reviews]);
-      setComment('');
-      setRating(5);
+      let updatedReview: ApiReview;
+
+      if (isEditMode && existingUserReview) {
+        // 更新モード
+        updatedReview = await reviewApi.updateReview(
+          existingUserReview.id,
+          { rating, comment },
+          token
+        );
+        // 既存レビューを更新
+        setReviews(prev => prev.map(r =>
+          r.id === updatedReview.id ? updatedReview : r
+        ));
+        setExistingUserReview(updatedReview);
+      } else {
+        // 新規作成モード
+        updatedReview = await reviewApi.createReview(Number(id), { rating, comment }, token);
+        setReviews(prev => [updatedReview, ...prev]);
+        setExistingUserReview(updatedReview);
+      }
+
       // 商品の評価を再取得して更新
       const updatedProduct = await productApi.getProduct(Number(id));
       setProduct(updatedProduct);
@@ -275,8 +309,17 @@ export function ProductDetail() {
         {/* Review Form */}
         <div className="bg-white rounded-xl shadow-md p-8 mt-8">
           <h2 className="text-2xl mb-4" style={{ color: 'var(--text)' }}>
-            Write a Review / レビューを書く
+            {isEditMode
+              ? 'Edit Your Review / レビューを編集'
+              : 'Write a Review / レビューを書く'
+            }
           </h2>
+          {isEditMode && (
+            <div className="mb-4 p-3 bg-blue-100 text-blue-700 rounded-lg">
+              You have already reviewed this product. You can edit your review below.
+              / この商品はすでにレビュー済みです。以下から編集できます。
+            </div>
+          )}
           {reviewError && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
               {reviewError}
@@ -319,7 +362,10 @@ export function ProductDetail() {
               className="px-6 py-3 rounded-full text-white disabled:opacity-50"
               style={{ backgroundColor: 'var(--primary)' }}
             >
-              {isSubmittingReview ? 'Submitting... / 投稿中...' : 'Submit Review / レビューを投稿'}
+              {isSubmittingReview
+                ? (isEditMode ? 'Updating... / 更新中...' : 'Submitting... / 投稿中...')
+                : (isEditMode ? 'Update Review / レビューを更新' : 'Submit Review / レビューを投稿')
+              }
             </button>
           </form>
         </div>

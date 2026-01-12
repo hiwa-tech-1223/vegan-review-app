@@ -30,6 +30,7 @@ vi.mock('../../reviews', () => ({
   reviewApi: {
     getProductReviews: vi.fn(),
     createReview: vi.fn(),
+    updateReview: vi.fn(),
   },
 }));
 
@@ -316,9 +317,11 @@ describe('ProductDetail', () => {
         );
       });
 
-      // 新しいレビューが表示される
+      // 新しいレビューが表示される（テキストエリアとレビューリストの両方に表示される）
       await waitFor(() => {
-        expect(screen.getByText('Amazing!')).toBeInTheDocument();
+        const amazingTexts = screen.getAllByText('Amazing!');
+        // テキストエリア（編集モード用）とレビューリストの2箇所に表示される
+        expect(amazingTexts.length).toBeGreaterThanOrEqual(2);
       });
     });
 

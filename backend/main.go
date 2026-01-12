@@ -102,6 +102,7 @@ func main() {
 
 	// Review routes (protected write)
 	authGroup.POST("/products/:id/reviews", reviewHandler.CreateReview)
+	authGroup.PUT("/reviews/:id", reviewHandler.UpdateReview)
 	authGroup.DELETE("/reviews/:id", reviewHandler.DeleteReview)
 
 	// Favorite routes (all protected)

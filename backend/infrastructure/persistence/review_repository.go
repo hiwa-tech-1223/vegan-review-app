@@ -56,6 +56,17 @@ func (r *reviewRepository) Create(review *entity.Review) error {
 	return r.db.Preload("User").First(review, "id = ?", review.ID).Error
 }
 
+func (r *reviewRepository) Update(review *entity.Review) error {
+	if err := r.db.Model(review).Updates(map[string]interface{}{
+		"rating":  review.Rating,
+		"comment": review.Comment,
+	}).Error; err != nil {
+		return err
+	}
+	// Reload with User
+	return r.db.Preload("User").First(review, "id = ?", review.ID).Error
+}
+
 func (r *reviewRepository) Delete(id int64) error {
 	return r.db.Delete(&entity.Review{}, "id = ?", id).Error
 }

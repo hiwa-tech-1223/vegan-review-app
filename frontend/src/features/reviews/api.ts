@@ -35,6 +35,27 @@ export const reviewApi = {
     return response.json();
   },
 
+  // レビューを更新（認証必要）
+  async updateReview(
+    reviewId: number,
+    data: { rating: number; comment: string },
+    token: string
+  ): Promise<ApiReview> {
+    const response = await fetch(`${API_BASE_URL}/api/reviews/${reviewId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update review');
+    }
+    return response.json();
+  },
+
   // レビューを削除（認証必要）
   async deleteReview(reviewId: number, token: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/api/reviews/${reviewId}`, {

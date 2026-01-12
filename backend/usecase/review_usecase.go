@@ -67,6 +67,34 @@ func (u *ReviewUsecase) DeleteReview(id, userID int64, isAdmin bool) error {
 	return u.updateProductRating(productID)
 }
 
+// UpdateReview - レビュー更新
+func (u *ReviewUsecase) UpdateReview(id, userID int64, rating int, comment string) (*entity.Review, error) {
+	review, err := u.reviewRepo.FindByID(id)
+	if err != nil {
+		return nil, errors.New("review not found")
+	}
+
+	// 権限チェック（自分のレビューのみ編集可能）
+	if review.UserID != userID {
+		return nil, errors.New("permission denied")
+	}
+
+	// 値を更新
+	review.Rating = rating
+	review.Comment = comment
+
+	if err := u.reviewRepo.Update(review); err != nil {
+		return nil, err
+	}
+
+	// 商品の評価を更新
+	if err := u.updateProductRating(review.ProductID); err != nil {
+		return nil, err
+	}
+
+	return review, nil
+}
+
 // updateProductRating - 商品の評価を更新
 func (u *ReviewUsecase) updateProductRating(productID int64) error {
 	avg, count, err := u.reviewRepo.GetProductRatingStats(productID)
