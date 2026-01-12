@@ -200,7 +200,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* 基本情報セクション */}
           <div className="bg-white rounded-lg shadow-sm p-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">基本情報 / Basic Information</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-6">製品情報 / Product Information</h2>
             <div className="space-y-6">
               {/* Product Name (JA) */}
               <div>

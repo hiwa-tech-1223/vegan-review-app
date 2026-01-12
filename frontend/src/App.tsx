@@ -13,7 +13,10 @@ import {
   AdminAuthCallback,
   AdminProductList,
   AdminProductForm,
+  AdminCategoryList,
+  AdminCategoryForm,
   AdminReviewManagement,
+  ManagedUserList,
 } from './features/admin';
 
 // Common components
@@ -133,6 +136,38 @@ function AppRoutes() {
               reviews={reviews}
               setReviews={setReviews}
             />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/categories"
+        element={
+          <ProtectedAdminRoute>
+            <AdminCategoryList admin={admin!} />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/categories/new"
+        element={
+          <ProtectedAdminRoute>
+            <AdminCategoryForm admin={admin!} />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/categories/:id/edit"
+        element={
+          <ProtectedAdminRoute>
+            <AdminCategoryForm admin={admin!} />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedAdminRoute>
+            <ManagedUserList admin={admin!} />
           </ProtectedAdminRoute>
         }
       />

@@ -31,10 +31,19 @@ func (h *ProductHandler) GetCategories(c echo.Context) error {
 
 // GetProducts - 商品一覧取得
 func (h *ProductHandler) GetProducts(c echo.Context) error {
-	category := c.QueryParam("category")
+	categoryStr := c.QueryParam("category")
 	search := c.QueryParam("search")
 
-	products, err := h.productUsecase.GetAllProducts(category, search)
+	var categoryID int64
+	if categoryStr != "" {
+		var err error
+		categoryID, err = strconv.ParseInt(categoryStr, 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid category ID"})
+		}
+	}
+
+	products, err := h.productUsecase.GetAllProducts(categoryID, search)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

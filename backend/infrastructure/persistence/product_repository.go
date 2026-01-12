@@ -16,15 +16,14 @@ func NewProductRepository(db *gorm.DB) repository.ProductRepository {
 	return &productRepository{db: db}
 }
 
-func (r *productRepository) FindAll(categorySlug, search string) ([]entity.Product, error) {
+func (r *productRepository) FindAll(categoryID int64, search string) ([]entity.Product, error) {
 	var products []entity.Product
 	query := r.db.Preload("Categories")
 
-	if categorySlug != "" && categorySlug != "all" {
+	if categoryID > 0 {
 		// 多対多: product_categories中間テーブルを経由してJOIN
 		query = query.Joins("JOIN product_categories ON product_categories.product_id = products.id").
-			Joins("JOIN categories ON categories.id = product_categories.category_id").
-			Where("categories.slug = ?", categorySlug)
+			Where("product_categories.category_id = ?", categoryID)
 	}
 
 	if search != "" {
@@ -93,9 +92,9 @@ func (r *categoryRepository) FindAll() ([]entity.Category, error) {
 	return categories, nil
 }
 
-func (r *categoryRepository) FindBySlug(slug string) (*entity.Category, error) {
+func (r *categoryRepository) FindByID(id int64) (*entity.Category, error) {
 	var category entity.Category
-	if err := r.db.Where("slug = ?", slug).First(&category).Error; err != nil {
+	if err := r.db.First(&category, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &category, nil

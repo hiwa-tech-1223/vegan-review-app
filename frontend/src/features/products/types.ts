@@ -4,7 +4,6 @@ export interface Category {
   id: number;
   name: string;
   nameJa: string;
-  slug: string;
 }
 
 export interface Product {
@@ -25,7 +24,6 @@ export interface ApiCategory {
   id: number;
   name: string;
   nameJa: string;
-  slug: string;
 }
 
 export interface ApiProduct {

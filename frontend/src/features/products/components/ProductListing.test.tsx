@@ -16,9 +16,9 @@ vi.mock('../api', () => ({
 
 // テスト用データ
 const mockCategories: ApiCategory[] = [
-  { id: 1, name: 'Meat Alternatives', nameJa: '代替肉', slug: 'meat-alternatives' },
-  { id: 2, name: 'Dairy Alternatives', nameJa: '乳製品代替', slug: 'dairy-alternatives' },
-  { id: 3, name: 'Snacks', nameJa: 'スナック', slug: 'snacks' },
+  { id: 1, name: 'Meat Alternatives', nameJa: '代替肉' },
+  { id: 2, name: 'Dairy Alternatives', nameJa: '乳製品代替' },
+  { id: 3, name: 'Snacks', nameJa: 'スナック' },
 ];
 
 const mockProducts: ApiProduct[] = [
@@ -207,7 +207,7 @@ describe('ProductListing', () => {
 
       await waitFor(() => {
         expect(productApi.getProducts).toHaveBeenCalledWith({
-          category: 'dairy-alternatives',
+          category: 2,
           search: '',
         });
       });
@@ -226,7 +226,7 @@ describe('ProductListing', () => {
 
       await waitFor(() => {
         expect(productApi.getProducts).toHaveBeenCalledWith({
-          category: 'snacks',
+          category: 3,
           search: '',
         });
       });
@@ -236,7 +236,7 @@ describe('ProductListing', () => {
 
       await waitFor(() => {
         expect(productApi.getProducts).toHaveBeenCalledWith({
-          category: 'all',
+          category: undefined,
           search: '',
         });
       });
@@ -264,7 +264,7 @@ describe('ProductListing', () => {
       // デバウンス後にAPIが呼ばれることを確認（300ms + 余裕）
       await waitFor(() => {
         expect(productApi.getProducts).toHaveBeenCalledWith({
-          category: 'all',
+          category: undefined,
           search: 'burger',
         });
       }, { timeout: 1000 });
@@ -289,7 +289,7 @@ describe('ProductListing', () => {
 
       await waitFor(() => {
         expect(productApi.getProducts).toHaveBeenCalledWith({
-          category: 'all',
+          category: undefined,
           search: 'burger',
         });
       }, { timeout: 1000 });
@@ -300,7 +300,7 @@ describe('ProductListing', () => {
       // 空の検索で再取得
       await waitFor(() => {
         expect(productApi.getProducts).toHaveBeenCalledWith({
-          category: 'all',
+          category: undefined,
           search: '',
         });
       }, { timeout: 1000 });

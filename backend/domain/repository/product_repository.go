@@ -4,7 +4,7 @@ import "backend/domain/entity"
 
 // ProductRepository - 商品リポジトリインターフェース
 type ProductRepository interface {
-	FindAll(categorySlug, search string) ([]entity.Product, error)
+	FindAll(categoryID int64, search string) ([]entity.Product, error)
 	FindByID(id int64) (*entity.Product, error)
 	Create(product *entity.Product) error
 	Update(product *entity.Product) error
@@ -15,5 +15,5 @@ type ProductRepository interface {
 // CategoryRepository - カテゴリリポジトリインターフェース
 type CategoryRepository interface {
 	FindAll() ([]entity.Category, error)
-	FindBySlug(slug string) (*entity.Category, error)
+	FindByID(id int64) (*entity.Category, error)
 }

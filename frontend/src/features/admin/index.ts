@@ -7,4 +7,7 @@ export { AdminLogin } from './components/AdminLogin';
 export { AdminAuthCallback } from './components/AdminAuthCallback';
 export { AdminProductList } from './components/AdminProductList';
 export { AdminProductForm } from './components/AdminProductForm';
+export { AdminCategoryList } from './components/AdminCategoryList';
+export { AdminCategoryForm } from './components/AdminCategoryForm';
 export { AdminReviewManagement } from './components/AdminReviewManagement';
+export { ManagedUserList } from './components/AdminUserList';

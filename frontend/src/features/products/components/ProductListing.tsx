@@ -13,7 +13,7 @@ interface ProductListingProps {
 export function ProductListing({ user }: ProductListingProps) {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | number>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +58,7 @@ export function ProductListing({ user }: ProductListingProps) {
       setError(null);
       try {
         const data = await productApi.getProducts({
-          category: selectedCategory,
+          category: selectedCategory === 'all' ? undefined : selectedCategory,
           search: searchQuery,
         });
         setProducts(data ?? []);
@@ -169,13 +169,13 @@ export function ProductListing({ user }: ProductListingProps) {
               <button
                 key={category.id}
                 onClick={() => {
-                  setSelectedCategory(category.slug);
+                  setSelectedCategory(category.id);
                   setCurrentPage(1);
                 }}
                 className="whitespace-nowrap px-4 py-2 rounded-full transition-all"
                 style={{
-                  backgroundColor: selectedCategory === category.slug ? 'var(--primary)' : 'transparent',
-                  color: selectedCategory === category.slug ? 'white' : 'var(--text)'
+                  backgroundColor: selectedCategory === category.id ? 'var(--primary)' : 'transparent',
+                  color: selectedCategory === category.id ? 'white' : 'var(--text)'
                 }}
               >
                 {category.name} / {category.nameJa}

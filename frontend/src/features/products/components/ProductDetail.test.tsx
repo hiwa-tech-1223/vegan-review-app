@@ -58,8 +58,8 @@ const mockProduct: ApiProduct = {
   imageUrl: 'https://example.com/burger.jpg',
   affiliateUrl: null,
   categories: [
-    { id: 1, name: 'Meat Alternatives', nameJa: '代替肉', slug: 'meat-alternatives' },
-    { id: 2, name: 'Snacks', nameJa: 'スナック', slug: 'snacks' },
+    { id: 1, name: 'Meat Alternatives', nameJa: '代替肉' },
+    { id: 2, name: 'Snacks', nameJa: 'スナック' },
   ],
   rating: 4.5,
   reviewCount: 120,

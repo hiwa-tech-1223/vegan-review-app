@@ -7,7 +7,6 @@ type Category struct {
 	ID               int64     `json:"id" gorm:"primaryKey;autoIncrement"`
 	Name             string    `json:"name"`
 	NameJa           string    `json:"nameJa"`
-	Slug             string    `json:"slug" gorm:"uniqueIndex"`
 	CreatedByAdminID *int64    `json:"createdByAdminId"`
 	UpdatedByAdminID *int64    `json:"updatedByAdminId"`
 	CreatedAt        time.Time `json:"createdAt"`

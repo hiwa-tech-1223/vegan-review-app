@@ -20,8 +20,8 @@ func NewProductUsecase(productRepo repository.ProductRepository, categoryRepo re
 }
 
 // GetAllProducts - 商品一覧取得
-func (u *ProductUsecase) GetAllProducts(categorySlug, search string) ([]entity.Product, error) {
-	return u.productRepo.FindAll(categorySlug, search)
+func (u *ProductUsecase) GetAllProducts(categoryID int64, search string) ([]entity.Product, error) {
+	return u.productRepo.FindAll(categoryID, search)
 }
 
 // GetProduct - 商品詳細取得

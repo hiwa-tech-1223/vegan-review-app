@@ -52,14 +52,14 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
   };
 
   const handleDeleteReview = (reviewId: number) => {
-    if (confirm('Are you sure you want to delete this review?')) {
+    if (confirm('このレビューを削除しますか？\n\nAre you sure you want to delete this review?')) {
       setReviews(reviews.filter(r => r.id !== reviewId));
     }
   };
 
   const handleBulkDelete = () => {
     if (selectedReviews.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedReviews.length} review(s)?`)) {
+    if (confirm(`${selectedReviews.length}件のレビューを削除しますか？\n\nAre you sure you want to delete ${selectedReviews.length} review(s)?`)) {
       setReviews(reviews.filter(r => !selectedReviews.includes(r.id)));
       setSelectedReviews([]);
     }
@@ -75,7 +75,8 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
           {selectedReviews.length > 0 && (
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+              style={{ backgroundColor: '#dc2626', color: 'white' }}
             >
               <Trash2 className="w-4 h-4" />
               Delete Selected ({selectedReviews.length})

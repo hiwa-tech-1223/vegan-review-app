@@ -9,7 +9,9 @@ interface AdminHeaderProps {
 export function AdminHeader({ admin }: AdminHeaderProps) {
   const location = useLocation();
   const isProductsActive = location.pathname.includes('/admin/products');
+  const isCategoriesActive = location.pathname.includes('/admin/categories');
   const isReviewsActive = location.pathname.includes('/admin/reviews');
+  const isUsersActive = location.pathname.includes('/admin/users');
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -43,6 +45,16 @@ export function AdminHeader({ admin }: AdminHeaderProps) {
             Products
           </Link>
           <Link
+            to="/admin/categories"
+            className="px-4 py-2 rounded-lg transition-all"
+            style={{
+              backgroundColor: isCategoriesActive ? '#4A7C59' : 'transparent',
+              color: isCategoriesActive ? 'white' : '#333333'
+            }}
+          >
+            Categories
+          </Link>
+          <Link
             to="/admin/reviews"
             className="px-4 py-2 rounded-lg transition-all"
             style={{
@@ -51,6 +63,16 @@ export function AdminHeader({ admin }: AdminHeaderProps) {
             }}
           >
             Reviews
+          </Link>
+          <Link
+            to="/admin/users"
+            className="px-4 py-2 rounded-lg transition-all"
+            style={{
+              backgroundColor: isUsersActive ? '#4A7C59' : 'transparent',
+              color: isUsersActive ? 'white' : '#333333'
+            }}
+          >
+            Users
           </Link>
         </nav>
       </div>

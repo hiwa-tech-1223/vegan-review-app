@@ -94,7 +94,7 @@ type mockProductRepository struct {
 	}
 }
 
-func (m *mockProductRepository) FindAll(categorySlug, search string) ([]entity.Product, error) {
+func (m *mockProductRepository) FindAll(categoryID int64, search string) ([]entity.Product, error) {
 	return nil, nil
 }
 

@@ -24,6 +24,7 @@ const categories = [
 export function AdminProductList({ admin, products, setProducts }: AdminProductListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -48,8 +49,33 @@ export function AdminProductList({ admin, products, setProducts }: AdminProductL
   const displayedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
   const handleDeleteProduct = (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+    if (confirm('この商品を削除しますか？\n\nAre you sure you want to delete this product?')) {
       setProducts(allProducts.filter(p => p.id !== id));
+      setSelectedProducts(selectedProducts.filter(pId => pId !== id));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedProducts(displayedProducts.map(p => p.id));
+    } else {
+      setSelectedProducts([]);
+    }
+  };
+
+  const handleSelectProduct = (productId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedProducts([...selectedProducts, productId]);
+    } else {
+      setSelectedProducts(selectedProducts.filter(id => id !== productId));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedProducts.length === 0) return;
+    if (confirm(`${selectedProducts.length}件の商品を削除しますか？\n\nAre you sure you want to delete ${selectedProducts.length} product(s)?`)) {
+      setProducts(allProducts.filter(p => !selectedProducts.includes(p.id)));
+      setSelectedProducts([]);
     }
   };
 
@@ -60,13 +86,26 @@ export function AdminProductList({ admin, products, setProducts }: AdminProductL
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl text-gray-900">Product Management</h1>
-          <Link
-            to="/admin/products/new"
-            className="flex items-center gap-2 px-4 py-2 bg-[#4A7C59] text-white rounded-lg hover:bg-[#3d6849] transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            Add Product
-          </Link>
+          <div className="flex items-center gap-3">
+            {selectedProducts.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+                style={{ backgroundColor: '#dc2626', color: 'white' }}
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected ({selectedProducts.length})
+              </button>
+            )}
+            <Link
+              to="/admin/products/new"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
+              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+            >
+              <Plus className="w-5 h-5" />
+              Add Product
+            </Link>
+          </div>
         </div>
 
         {/* Filters */}
@@ -107,6 +146,14 @@ export function AdminProductList({ admin, products, setProducts }: AdminProductL
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3 text-left w-12">
+                  <input
+                    type="checkbox"
+                    checked={displayedProducts.length > 0 && selectedProducts.length === displayedProducts.length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4 h-4 text-[#4A7C59] rounded focus:ring-[#4A7C59]"
+                  />
+                </th>
                 <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
                   Product
                 </th>
@@ -127,6 +174,14 @@ export function AdminProductList({ admin, products, setProducts }: AdminProductL
             <tbody className="divide-y divide-gray-200">
               {displayedProducts.map(product => (
                 <tr key={product.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-4 w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={(e) => handleSelectProduct(product.id, e.target.checked)}
+                      className="w-4 h-4 text-[#4A7C59] rounded focus:ring-[#4A7C59]"
+                    />
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <img

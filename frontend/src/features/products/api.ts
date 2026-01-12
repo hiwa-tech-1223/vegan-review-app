@@ -15,10 +15,10 @@ export const productApi = {
   },
 
   // 商品一覧を取得
-  async getProducts(params?: { category?: string; search?: string }): Promise<ApiProduct[]> {
+  async getProducts(params?: { category?: number; search?: string }): Promise<ApiProduct[]> {
     const searchParams = new URLSearchParams();
-    if (params?.category && params.category !== 'all') {
-      searchParams.append('category', params.category);
+    if (params?.category) {
+      searchParams.append('category', params.category.toString());
     }
     if (params?.search) {
       searchParams.append('search', params.search);
