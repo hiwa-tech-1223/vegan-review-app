@@ -24,6 +24,9 @@ type Product struct {
 	DescriptionJa    string     `json:"descriptionJa"`
 	ImageURL         string     `json:"imageUrl" gorm:"column:image_url"`
 	AffiliateURL     *string    `json:"affiliateUrl" gorm:"column:affiliate_url"`
+	AmazonURL        *string    `json:"amazonUrl" gorm:"column:amazon_url"`
+	RakutenURL       *string    `json:"rakutenUrl" gorm:"column:rakuten_url"`
+	YahooURL         *string    `json:"yahooUrl" gorm:"column:yahoo_url"`
 	Rating           float64    `json:"rating" gorm:"default:0"`
 	ReviewCount      int        `json:"reviewCount" gorm:"default:0"`
 	CreatedByAdminID *int64     `json:"createdByAdminId"`

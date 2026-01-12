@@ -221,12 +221,13 @@ export function ProductDetail() {
       {/* Product Detail */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="grid md:grid-cols-2 gap-8 p-8">
-            <div>
+          <div className="grid md:grid-cols-2 gap-8 p-8 pb-4 items-start">
+            <div className="md:sticky md:top-8">
               <img
                 src={product.imageUrl || 'https://placehold.co/400x300?text=No+Image'}
                 alt={product.name}
-                className="w-full h-80 object-cover rounded-xl"
+                className="w-full object-cover rounded-xl"
+                style={{ aspectRatio: '4/3' }}
               />
             </div>
             <div>
@@ -274,7 +275,87 @@ export function ProductDetail() {
                 <Heart className="w-5 h-5" fill={isFavorite ? 'white' : 'none'} />
                 {isFavorite ? 'Added to Favorites / お気に入り済み' : 'Add to Favorites / お気に入りに追加'}
               </button>
-              {product.affiliateUrl && (
+              {/* 購入ボタン（各ストア） */}
+              {(product.amazonUrl || product.rakutenUrl || product.yahooUrl) && (
+                <div className="mt-4">
+                  <p className="text-sm mb-2" style={{ color: '#666' }}>
+                    購入する / Buy Now
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {product.amazonUrl && (
+                      <a
+                        href={product.amazonUrl}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        className="transition-all hover:opacity-90 hover:shadow-md"
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '12px 8px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          backgroundColor: '#FF9900',
+                          color: '#FFFFFF',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        Amazon
+                      </a>
+                    )}
+                    {product.rakutenUrl && (
+                      <a
+                        href={product.rakutenUrl}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        className="transition-all hover:opacity-90 hover:shadow-md"
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '12px 8px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          backgroundColor: '#BF0000',
+                          color: '#FFFFFF',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        楽天市場
+                      </a>
+                    )}
+                    {product.yahooUrl && (
+                      <a
+                        href={product.yahooUrl}
+                        target="_blank"
+                        rel="noopener noreferrer sponsored"
+                        className="transition-all hover:opacity-90 hover:shadow-md"
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '12px 8px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          backgroundColor: '#FF0033',
+                          color: '#FFFFFF',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        Yahoo!
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* 後方互換: 既存のaffiliateUrlがある場合 */}
+              {product.affiliateUrl && !product.amazonUrl && !product.rakutenUrl && !product.yahooUrl && (
                 <a
                   href={product.affiliateUrl}
                   target="_blank"
@@ -291,7 +372,6 @@ export function ProductDetail() {
               )}
             </div>
           </div>
-
           {/* Description */}
           <div className="px-8 pb-8">
             <h2 className="text-xl mb-3" style={{ color: 'var(--text)' }}>

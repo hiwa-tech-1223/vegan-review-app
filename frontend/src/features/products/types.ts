@@ -36,7 +36,10 @@ export interface ApiProduct {
   description: string;
   descriptionJa: string;
   imageUrl: string;
-  affiliateUrl: string | null;  // アフィリエイトリンク
+  affiliateUrl: string | null;  // アフィリエイトリンク（後方互換）
+  amazonUrl: string | null;     // もしもアフィリエイト経由Amazonリンク
+  rakutenUrl: string | null;    // もしもアフィリエイト経由楽天リンク
+  yahooUrl: string | null;      // もしもアフィリエイト経由Yahoo!リンク
   rating: number;
   reviewCount: number;
   createdAt: string;
