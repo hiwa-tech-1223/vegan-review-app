@@ -101,6 +101,25 @@ export function ProductDetail() {
     fetchFavorites();
   }, [user, token, id]);
 
+  // レビューのバリデーション
+  const validateReview = (): string | null => {
+    const trimmedComment = comment.trim();
+
+    if (rating < 1 || rating > 5) {
+      return 'Rating must be between 1 and 5 / 評価は1〜5の間で選択してください';
+    }
+    if (!trimmedComment) {
+      return 'Comment is required / コメントを入力してください';
+    }
+    if (trimmedComment.length < 10) {
+      return `Comment must be at least 10 characters (currently ${trimmedComment.length}) / コメントは10文字以上必要です（現在${trimmedComment.length}文字）`;
+    }
+    if (trimmedComment.length > 1000) {
+      return `Comment must be at most 1000 characters (currently ${trimmedComment.length}) / コメントは1000文字以内にしてください（現在${trimmedComment.length}文字）`;
+    }
+    return null;
+  };
+
   // レビュー投稿/更新
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +127,14 @@ export function ProductDetail() {
       navigate('/login');
       return;
     }
-    if (!comment.trim() || !id) return;
+    if (!id) return;
+
+    // フロントエンドバリデーション
+    const validationError = validateReview();
+    if (validationError) {
+      setReviewError(validationError);
+      return;
+    }
 
     setIsSubmittingReview(true);
     setReviewError(null);
@@ -434,11 +460,16 @@ export function ProductDetail() {
                 className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[var(--primary)]"
                 rows={4}
                 placeholder="Share your experience... / あなたの体験をシェア..."
+                minLength={10}
+                maxLength={1000}
               />
+              <p className={`text-sm mt-1 ${comment.trim().length < 10 ? 'text-red-500' : 'text-gray-500'}`}>
+                {comment.trim().length} / 1000 {comment.trim().length < 10 && `(${10 - comment.trim().length} more needed / あと${10 - comment.trim().length}文字)`}
+              </p>
             </div>
             <button
               type="submit"
-              disabled={isSubmittingReview || !comment.trim()}
+              disabled={isSubmittingReview || comment.trim().length < 10}
               className="px-6 py-3 rounded-full text-white disabled:opacity-50"
               style={{ backgroundColor: 'var(--primary)' }}
             >

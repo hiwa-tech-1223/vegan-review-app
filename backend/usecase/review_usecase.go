@@ -3,6 +3,7 @@ package usecase
 import (
 	"backend/domain/entity"
 	"backend/domain/repository"
+	"backend/domain/valueobject"
 	"errors"
 )
 
@@ -31,19 +32,37 @@ func (u *ReviewUsecase) GetUserReviews(userID int64) ([]entity.Review, error) {
 }
 
 // CreateReview - レビュー作成
-func (u *ReviewUsecase) CreateReview(review *entity.Review) error {
-	// 既にレビュー済みかチェック
-	existing, _ := u.reviewRepo.FindByProductIDAndUserID(review.ProductID, review.UserID)
-	if existing != nil {
-		return errors.New("you have already reviewed this product")
+func (u *ReviewUsecase) CreateReview(productID, userID int64, ratingValue int, commentValue string) (*entity.Review, error) {
+	// Value Object作成（バリデーション）
+	rating, err := valueobject.NewRating(ratingValue)
+	if err != nil {
+		return nil, err
 	}
 
+	comment, err := valueobject.NewComment(commentValue)
+	if err != nil {
+		return nil, err
+	}
+
+	// 既にレビュー済みかチェック
+	existing, _ := u.reviewRepo.FindByProductIDAndUserID(productID, userID)
+	if existing != nil {
+		return nil, errors.New("you have already reviewed this product")
+	}
+
+	// Entity作成
+	review := entity.NewReview(productID, userID, rating, comment)
+
 	if err := u.reviewRepo.Create(review); err != nil {
-		return err
+		return nil, err
 	}
 
 	// 商品の評価を更新
-	return u.updateProductRating(review.ProductID)
+	if err := u.updateProductRating(productID); err != nil {
+		return nil, err
+	}
+
+	return review, nil
 }
 
 // DeleteReview - レビュー削除
@@ -68,7 +87,18 @@ func (u *ReviewUsecase) DeleteReview(id, userID int64, isAdmin bool) error {
 }
 
 // UpdateReview - レビュー更新
-func (u *ReviewUsecase) UpdateReview(id, userID int64, rating int, comment string) (*entity.Review, error) {
+func (u *ReviewUsecase) UpdateReview(id, userID int64, ratingValue int, commentValue string) (*entity.Review, error) {
+	// Value Object作成（バリデーション）
+	rating, err := valueobject.NewRating(ratingValue)
+	if err != nil {
+		return nil, err
+	}
+
+	comment, err := valueobject.NewComment(commentValue)
+	if err != nil {
+		return nil, err
+	}
+
 	review, err := u.reviewRepo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("review not found")

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"backend/domain/entity"
+	"backend/domain/valueobject"
 	"backend/usecase"
 
 	"github.com/labstack/echo/v4"
@@ -59,14 +59,20 @@ func (h *ReviewHandler) CreateReview(c echo.Context) error {
 	}
 	userID := c.Get("userId").(int64)
 
-	review := new(entity.Review)
-	if err := c.Bind(review); err != nil {
+	var req struct {
+		Rating  int    `json:"rating"`
+		Comment string `json:"comment"`
+	}
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	review.ProductID = productID
-	review.UserID = userID
 
-	if err := h.reviewUsecase.CreateReview(review); err != nil {
+	review, err := h.reviewUsecase.CreateReview(productID, userID, req.Rating, req.Comment)
+	if err != nil {
+		// バリデーションエラー
+		if isValidationError(err) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
 		if err.Error() == "you have already reviewed this product" {
 			return c.JSON(http.StatusConflict, map[string]string{"error": err.Error()})
 		}
@@ -117,6 +123,10 @@ func (h *ReviewHandler) UpdateReview(c echo.Context) error {
 
 	review, err := h.reviewUsecase.UpdateReview(id, userID, req.Rating, req.Comment)
 	if err != nil {
+		// バリデーションエラー
+		if isValidationError(err) {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		}
 		switch err.Error() {
 		case "review not found":
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -127,4 +137,16 @@ func (h *ReviewHandler) UpdateReview(c echo.Context) error {
 		}
 	}
 	return c.JSON(http.StatusOK, review)
+}
+
+// isValidationError - バリデーションエラーかどうかを判定
+func isValidationError(err error) bool {
+	switch err {
+	case valueobject.ErrInvalidRating,
+		valueobject.ErrCommentEmpty,
+		valueobject.ErrCommentTooShort,
+		valueobject.ErrCommentTooLong:
+		return true
+	}
+	return false
 }

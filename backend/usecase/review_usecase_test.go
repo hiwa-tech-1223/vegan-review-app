@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"backend/domain/entity"
+	"backend/domain/valueobject"
 	"errors"
 	"testing"
 )
@@ -86,7 +87,7 @@ func (m *mockReviewRepository) GetProductRatingStats(productID int64) (float64, 
 }
 
 type mockProductRepository struct {
-	updateRatingFunc func(productID int64, rating float64, count int) error
+	updateRatingFunc  func(productID int64, rating float64, count int) error
 	updateRatingCalls []struct {
 		productID int64
 		rating    float64
@@ -126,37 +127,48 @@ func (m *mockProductRepository) UpdateRating(productID int64, rating float64, co
 	return nil
 }
 
+// ===== Helper functions =====
+
+func mustRating(value int) valueobject.Rating {
+	r, _ := valueobject.NewRating(value)
+	return r
+}
+
+func mustComment(value string) valueobject.Comment {
+	c, _ := valueobject.NewComment(value)
+	return c
+}
+
 // ===== Tests =====
 
 func TestReviewUsecase_CreateReview(t *testing.T) {
 	testCases := []struct {
 		name             string
-		review           *entity.Review
+		productID        int64
+		userID           int64
+		rating           int
+		comment          string
 		existingReview   *entity.Review
 		createErr        error
 		wantErr          string
 		wantRatingUpdate bool
 	}{
 		{
-			name: "新規レビューを作成できる",
-			review: &entity.Review{
-				ProductID: 1,
-				UserID:    1,
-				Rating:    5,
-				Comment:   "Great product!",
-			},
+			name:             "新規レビューを作成できる",
+			productID:        1,
+			userID:           1,
+			rating:           5,
+			comment:          "Great product! I love it!",
 			existingReview:   nil,
 			wantErr:          "",
 			wantRatingUpdate: true,
 		},
 		{
-			name: "既にレビュー済みの場合はエラー",
-			review: &entity.Review{
-				ProductID: 1,
-				UserID:    1,
-				Rating:    5,
-				Comment:   "Another review",
-			},
+			name:      "既にレビュー済みの場合はエラー",
+			productID: 1,
+			userID:    1,
+			rating:    5,
+			comment:   "Another review text here",
 			existingReview: &entity.Review{
 				ID:        1,
 				ProductID: 1,
@@ -166,16 +178,34 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 			wantRatingUpdate: false,
 		},
 		{
-			name: "リポジトリエラー時はエラーを返す",
-			review: &entity.Review{
-				ProductID: 1,
-				UserID:    1,
-				Rating:    4,
-				Comment:   "Good",
-			},
+			name:             "リポジトリエラー時はエラーを返す",
+			productID:        1,
+			userID:           1,
+			rating:           4,
+			comment:          "Good product review",
 			existingReview:   nil,
 			createErr:        errors.New("database error"),
 			wantErr:          "database error",
+			wantRatingUpdate: false,
+		},
+		{
+			name:             "評価が範囲外の場合はエラー",
+			productID:        1,
+			userID:           1,
+			rating:           6,
+			comment:          "Invalid rating test",
+			existingReview:   nil,
+			wantErr:          "rating must be between 1 and 5",
+			wantRatingUpdate: false,
+		},
+		{
+			name:             "コメントが短すぎる場合はエラー",
+			productID:        1,
+			userID:           1,
+			rating:           5,
+			comment:          "Short",
+			existingReview:   nil,
+			wantErr:          "comment must be at least 10 characters",
 			wantRatingUpdate: false,
 		},
 	}
@@ -196,7 +226,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 			mockProductRepo := &mockProductRepository{}
 			usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			err := usecase.CreateReview(tc.review)
+			_, err := usecase.CreateReview(tc.productID, tc.userID, tc.rating, tc.comment)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -345,9 +375,9 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 
 func TestReviewUsecase_GetProductReviews(t *testing.T) {
 	mockReviews := []entity.Review{
-		{ID: 1, ProductID: 1, UserID: 1, Rating: 5},
-		{ID: 2, ProductID: 1, UserID: 2, Rating: 4},
-		{ID: 3, ProductID: 2, UserID: 1, Rating: 3},
+		{ID: 1, ProductID: 1, UserID: 1, Rating: mustRating(5)},
+		{ID: 2, ProductID: 1, UserID: 2, Rating: mustRating(4)},
+		{ID: 3, ProductID: 2, UserID: 1, Rating: mustRating(3)},
 	}
 
 	mockReviewRepo := &mockReviewRepository{reviews: mockReviews}
@@ -379,9 +409,9 @@ func TestReviewUsecase_GetProductReviews(t *testing.T) {
 
 func TestReviewUsecase_GetUserReviews(t *testing.T) {
 	mockReviews := []entity.Review{
-		{ID: 1, ProductID: 1, UserID: 1, Rating: 5},
-		{ID: 2, ProductID: 2, UserID: 1, Rating: 4},
-		{ID: 3, ProductID: 1, UserID: 2, Rating: 3},
+		{ID: 1, ProductID: 1, UserID: 1, Rating: mustRating(5)},
+		{ID: 2, ProductID: 2, UserID: 1, Rating: mustRating(4)},
+		{ID: 3, ProductID: 1, UserID: 2, Rating: mustRating(3)},
 	}
 
 	mockReviewRepo := &mockReviewRepository{reviews: mockReviews}
@@ -417,13 +447,13 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 1,
 			rating:        4,
-			comment:       "Updated comment",
+			comment:       "Updated comment text",
 			existingReview: &entity.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
-				Rating:    5,
-				Comment:   "Original comment",
+				Rating:    mustRating(5),
+				Comment:   mustComment("Original comment text"),
 			},
 			wantErr:          "",
 			wantRatingUpdate: true,
@@ -433,7 +463,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 2,
 			rating:        4,
-			comment:       "Trying to update",
+			comment:       "Trying to update text",
 			existingReview: &entity.Review{
 				ID:        1,
 				ProductID: 1,
@@ -447,7 +477,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			reviewID:         999,
 			requestUserID:    1,
 			rating:           4,
-			comment:          "Non-existent",
+			comment:          "Non-existent review",
 			existingReview:   nil,
 			wantErr:          "review not found",
 			wantRatingUpdate: false,
@@ -457,7 +487,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 1,
 			rating:        4,
-			comment:       "Update error",
+			comment:       "Update error test",
 			existingReview: &entity.Review{
 				ID:        1,
 				ProductID: 1,
@@ -465,6 +495,34 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			},
 			updateErr:        errors.New("database error"),
 			wantErr:          "database error",
+			wantRatingUpdate: false,
+		},
+		{
+			name:          "評価が範囲外の場合はエラー",
+			reviewID:      1,
+			requestUserID: 1,
+			rating:        0,
+			comment:       "Rating out of range",
+			existingReview: &entity.Review{
+				ID:        1,
+				ProductID: 1,
+				UserID:    1,
+			},
+			wantErr:          "rating must be between 1 and 5",
+			wantRatingUpdate: false,
+		},
+		{
+			name:          "コメントが短すぎる場合はエラー",
+			reviewID:      1,
+			requestUserID: 1,
+			rating:        4,
+			comment:       "Short",
+			existingReview: &entity.Review{
+				ID:        1,
+				ProductID: 1,
+				UserID:    1,
+			},
+			wantErr:          "comment must be at least 10 characters",
 			wantRatingUpdate: false,
 		},
 	}
@@ -504,11 +562,11 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			}
 
 			// 更新後のレビューの値を確認
-			if review.Rating != tc.rating {
-				t.Errorf("expected rating %d, got %d", tc.rating, review.Rating)
+			if review.Rating.Int() != tc.rating {
+				t.Errorf("expected rating %d, got %d", tc.rating, review.Rating.Int())
 			}
-			if review.Comment != tc.comment {
-				t.Errorf("expected comment %q, got %q", tc.comment, review.Comment)
+			if review.Comment.String() != tc.comment {
+				t.Errorf("expected comment %q, got %q", tc.comment, review.Comment.String())
 			}
 
 			// 評価更新が呼ばれたか確認
@@ -519,4 +577,50 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestReviewUsecase_ValidationErrors(t *testing.T) {
+	t.Run("Rating validation", func(t *testing.T) {
+		mockReviewRepo := &mockReviewRepository{
+			findByProductIDAndUserFunc: func(productID, userID int64) (*entity.Review, error) {
+				return nil, errors.New("not found")
+			},
+		}
+		mockProductRepo := &mockProductRepository{}
+		usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+
+		// 0 は無効
+		_, err := usecase.CreateReview(1, 1, 0, "Valid comment text")
+		if err == nil || err.Error() != "rating must be between 1 and 5" {
+			t.Errorf("expected rating validation error, got: %v", err)
+		}
+
+		// 6 は無効
+		_, err = usecase.CreateReview(1, 1, 6, "Valid comment text")
+		if err == nil || err.Error() != "rating must be between 1 and 5" {
+			t.Errorf("expected rating validation error, got: %v", err)
+		}
+	})
+
+	t.Run("Comment validation", func(t *testing.T) {
+		mockReviewRepo := &mockReviewRepository{
+			findByProductIDAndUserFunc: func(productID, userID int64) (*entity.Review, error) {
+				return nil, errors.New("not found")
+			},
+		}
+		mockProductRepo := &mockProductRepository{}
+		usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+
+		// 空のコメント
+		_, err := usecase.CreateReview(1, 1, 5, "")
+		if err == nil || err.Error() != "comment is required" {
+			t.Errorf("expected empty comment error, got: %v", err)
+		}
+
+		// 短すぎるコメント
+		_, err = usecase.CreateReview(1, 1, 5, "Short")
+		if err == nil || err.Error() != "comment must be at least 10 characters" {
+			t.Errorf("expected short comment error, got: %v", err)
+		}
+	})
 }
