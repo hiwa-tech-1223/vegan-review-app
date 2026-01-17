@@ -6,7 +6,7 @@ import { Product } from '../../products/types';
 import { mockProducts } from '../../../data/mockData';
 import { AdminHeader } from './AdminHeader';
 
-interface AdminProductListProps {
+interface AdminProductManagementProps {
   admin: Admin;
   products: Product[];
   setProducts: (products: Product[]) => void;
@@ -21,7 +21,7 @@ const categories = [
   'Seasonings'
 ];
 
-export function AdminProductList({ admin, products, setProducts }: AdminProductListProps) {
+export function AdminProductManagement({ admin, products, setProducts }: AdminProductManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);

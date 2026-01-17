@@ -11,12 +11,12 @@ import { MyPage } from './features/users';
 import {
   AdminLogin,
   AdminAuthCallback,
-  AdminProductList,
+  AdminProductManagement,
   AdminProductForm,
-  AdminCategoryList,
+  AdminCategoryManagement,
   AdminCategoryForm,
   AdminReviewManagement,
-  ManagedUserList,
+  AdminUserManagement,
 } from './features/admin';
 
 // Common components
@@ -95,7 +95,7 @@ function AppRoutes() {
         path="/admin/products"
         element={
           <ProtectedAdminRoute>
-            <AdminProductList
+            <AdminProductManagement
               admin={admin!}
               products={products}
               setProducts={setProducts}
@@ -143,7 +143,7 @@ function AppRoutes() {
         path="/admin/categories"
         element={
           <ProtectedAdminRoute>
-            <AdminCategoryList admin={admin!} />
+            <AdminCategoryManagement admin={admin!} />
           </ProtectedAdminRoute>
         }
       />
@@ -167,7 +167,7 @@ function AppRoutes() {
         path="/admin/users"
         element={
           <ProtectedAdminRoute>
-            <ManagedUserList admin={admin!} />
+            <AdminUserManagement admin={admin!} />
           </ProtectedAdminRoute>
         }
       />

@@ -6,11 +6,11 @@ import { AdminHeader } from './AdminHeader';
 import { productApi } from '../../products/api';
 import { Category } from '../../products/types';
 
-interface AdminCategoryListProps {
+interface AdminCategoryManagementProps {
   admin: Admin;
 }
 
-export function AdminCategoryList({ admin }: AdminCategoryListProps) {
+export function AdminCategoryManagement({ admin }: AdminCategoryManagementProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);

@@ -7,11 +7,11 @@ import { adminApi } from '../api';
 import { ManagedUser } from '../types';
 import { useAuth } from '../../auth';
 
-interface ManagedUserListProps {
+interface AdminUserManagementProps {
   admin: Admin;
 }
 
-export function ManagedUserList({ admin }: ManagedUserListProps) {
+export function AdminUserManagement({ admin }: AdminUserManagementProps) {
   const { token: adminToken } = useAuth();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
