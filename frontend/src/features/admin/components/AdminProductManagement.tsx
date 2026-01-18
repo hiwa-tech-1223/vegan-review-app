@@ -212,7 +212,7 @@ export function AdminProductManagement({ admin, products, setProducts }: AdminPr
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Link
-                        to={`/admin/products/edit/${product.id}`}
+                        to={`/admin/products/${product.id}/edit`}
                         className="p-2 text-gray-600 hover:text-[#4A7C59] hover:bg-gray-100 rounded transition-all"
                       >
                         <Edit2 className="w-4 h-4" />
