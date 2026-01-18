@@ -420,13 +420,14 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
             <button
               type="button"
               onClick={() => navigate('/admin/products')}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-[#4A7C59] text-white rounded-lg hover:bg-[#3d6849] transition-all"
+              className="px-6 py-2 rounded-lg transition-all text-white"
+              style={{ backgroundColor: 'var(--primary)' }}
             >
               {isEditMode ? 'Save Changes' : 'Add Product'}
             </button>
