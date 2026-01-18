@@ -95,7 +95,7 @@ export function AdminCategoryForm({ admin }: AdminCategoryFormProps) {
     <div className="min-h-screen bg-[#F9FAFB]">
       <AdminHeader admin={admin} />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-2xl text-gray-900 mb-6">
           {isEditMode ? 'Edit Category' : 'Add New Category'}
         </h1>
