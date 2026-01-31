@@ -1,4 +1,4 @@
-package usecase
+package customerusecase
 
 import (
 	"backend/domain/entity"

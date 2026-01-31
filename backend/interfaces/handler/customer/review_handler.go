@@ -1,22 +1,22 @@
-package handler
+package customerhandler
 
 import (
 	"net/http"
 	"strconv"
 
 	"backend/domain/valueobject"
-	"backend/usecase"
+	customerusecase "backend/usecase/customer"
 
 	"github.com/labstack/echo/v4"
 )
 
 // ReviewHandler - レビューハンドラー
 type ReviewHandler struct {
-	reviewUsecase *usecase.ReviewUsecase
+	reviewUsecase *customerusecase.ReviewUsecase
 }
 
 // NewReviewHandler - レビューハンドラーの生成
-func NewReviewHandler(reviewUsecase *usecase.ReviewUsecase) *ReviewHandler {
+func NewReviewHandler(reviewUsecase *customerusecase.ReviewUsecase) *ReviewHandler {
 	return &ReviewHandler{reviewUsecase: reviewUsecase}
 }
 

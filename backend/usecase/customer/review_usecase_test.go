@@ -1,4 +1,4 @@
-package usecase
+package customerusecase
 
 import (
 	"backend/domain/entity"
@@ -224,9 +224,9 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 				},
 			}
 			mockProductRepo := &mockProductRepository{}
-			usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			_, err := usecase.CreateReview(tc.productID, tc.userID, tc.rating, tc.comment)
+			_, err := uc.CreateReview(tc.productID, tc.userID, tc.rating, tc.comment)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -343,9 +343,9 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 				},
 			}
 			mockProductRepo := &mockProductRepository{}
-			usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			err := usecase.DeleteReview(tc.reviewID, tc.requestUserID, tc.isAdmin)
+			err := uc.DeleteReview(tc.reviewID, tc.requestUserID, tc.isAdmin)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -382,10 +382,10 @@ func TestReviewUsecase_GetProductReviews(t *testing.T) {
 
 	mockReviewRepo := &mockReviewRepository{reviews: mockReviews}
 	mockProductRepo := &mockProductRepository{}
-	usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+	uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
 	t.Run("商品のレビュー一覧を取得できる", func(t *testing.T) {
-		reviews, err := usecase.GetProductReviews(1)
+		reviews, err := uc.GetProductReviews(1)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 			return
@@ -396,7 +396,7 @@ func TestReviewUsecase_GetProductReviews(t *testing.T) {
 	})
 
 	t.Run("レビューがない商品は空配列を返す", func(t *testing.T) {
-		reviews, err := usecase.GetProductReviews(999)
+		reviews, err := uc.GetProductReviews(999)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 			return
@@ -416,10 +416,10 @@ func TestReviewUsecase_GetUserReviews(t *testing.T) {
 
 	mockReviewRepo := &mockReviewRepository{reviews: mockReviews}
 	mockProductRepo := &mockProductRepository{}
-	usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+	uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
 	t.Run("ユーザーのレビュー一覧を取得できる", func(t *testing.T) {
-		reviews, err := usecase.GetUserReviews(1)
+		reviews, err := uc.GetUserReviews(1)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 			return
@@ -541,9 +541,9 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 				},
 			}
 			mockProductRepo := &mockProductRepository{}
-			usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			review, err := usecase.UpdateReview(tc.reviewID, tc.requestUserID, tc.rating, tc.comment)
+			review, err := uc.UpdateReview(tc.reviewID, tc.requestUserID, tc.rating, tc.comment)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -587,16 +587,16 @@ func TestReviewUsecase_ValidationErrors(t *testing.T) {
 			},
 		}
 		mockProductRepo := &mockProductRepository{}
-		usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+		uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
 		// 0 は無効
-		_, err := usecase.CreateReview(1, 1, 0, "Valid comment text")
+		_, err := uc.CreateReview(1, 1, 0, "Valid comment text")
 		if err == nil || err.Error() != "rating must be between 1 and 5" {
 			t.Errorf("expected rating validation error, got: %v", err)
 		}
 
 		// 6 は無効
-		_, err = usecase.CreateReview(1, 1, 6, "Valid comment text")
+		_, err = uc.CreateReview(1, 1, 6, "Valid comment text")
 		if err == nil || err.Error() != "rating must be between 1 and 5" {
 			t.Errorf("expected rating validation error, got: %v", err)
 		}
@@ -609,16 +609,16 @@ func TestReviewUsecase_ValidationErrors(t *testing.T) {
 			},
 		}
 		mockProductRepo := &mockProductRepository{}
-		usecase := NewReviewUsecase(mockReviewRepo, mockProductRepo)
+		uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
 		// 空のコメント
-		_, err := usecase.CreateReview(1, 1, 5, "")
+		_, err := uc.CreateReview(1, 1, 5, "")
 		if err == nil || err.Error() != "comment is required" {
 			t.Errorf("expected empty comment error, got: %v", err)
 		}
 
 		// 短すぎるコメント
-		_, err = usecase.CreateReview(1, 1, 5, "Short")
+		_, err = uc.CreateReview(1, 1, 5, "Short")
 		if err == nil || err.Error() != "comment must be at least 10 characters" {
 			t.Errorf("expected short comment error, got: %v", err)
 		}

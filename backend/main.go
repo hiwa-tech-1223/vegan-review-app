@@ -8,7 +8,11 @@ import (
 	"backend/infrastructure/auth"
 	"backend/infrastructure/persistence"
 	"backend/interfaces/handler"
+	adminhandler "backend/interfaces/handler/admin"
+	customerhandler "backend/interfaces/handler/customer"
 	"backend/usecase"
+	adminusecase "backend/usecase/admin"
+	customerusecase "backend/usecase/customer"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -45,15 +49,17 @@ func main() {
 
 	// Initialize use cases
 	authUsecase := usecase.NewAuthUsecase(userRepo, adminRepo)
-	productUsecase := usecase.NewProductUsecase(productRepo, categoryRepo)
-	reviewUsecase := usecase.NewReviewUsecase(reviewRepo, productRepo)
 	favoriteUsecase := usecase.NewFavoriteUsecase(favoriteRepo)
+	adminProductUsecase := adminusecase.NewAdminProductUsecase(productRepo, categoryRepo)
+	customerProductUsecase := customerusecase.NewProductUsecase(productRepo, categoryRepo)
+	customerReviewUsecase := customerusecase.NewReviewUsecase(reviewRepo, productRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUsecase, oauthService, jwtService, cfg.FrontendURL)
-	productHandler := handler.NewProductHandler(productUsecase)
-	reviewHandler := handler.NewReviewHandler(reviewUsecase)
-	favoriteHandler := handler.NewFavoriteHandler(favoriteUsecase)
+	adminProductHandler := adminhandler.NewAdminProductHandler(adminProductUsecase)
+	customerProductHandler := customerhandler.NewProductHandler(customerProductUsecase)
+	customerReviewHandler := customerhandler.NewReviewHandler(customerReviewUsecase)
+	customerFavoriteHandler := customerhandler.NewFavoriteHandler(favoriteUsecase)
 
 	// Echo instance
 	e := echo.New()
@@ -78,14 +84,14 @@ func main() {
 	e.GET("/api/auth/admin/google/callback", authHandler.HandleAdminGoogleCallback)
 
 	// Category routes (public)
-	e.GET("/api/categories", productHandler.GetCategories)
+	e.GET("/api/categories", customerProductHandler.GetCategories)
 
 	// Product routes (public read)
-	e.GET("/api/products", productHandler.GetProducts)
-	e.GET("/api/products/:id", productHandler.GetProduct)
+	e.GET("/api/products", customerProductHandler.GetProducts)
+	e.GET("/api/products/:id", customerProductHandler.GetProduct)
 
 	// Review routes (public read)
-	e.GET("/api/products/:id/reviews", reviewHandler.GetProductReviews)
+	e.GET("/api/products/:id/reviews", customerReviewHandler.GetProductReviews)
 
 	// Protected routes - require authentication
 	authGroup := e.Group("/api")
@@ -95,23 +101,23 @@ func main() {
 	authGroup.GET("/auth/me", authHandler.GetCurrentUser)
 	authGroup.POST("/auth/logout", authHandler.HandleLogout)
 
-	// Product routes (protected write)
-	authGroup.POST("/products", productHandler.CreateProduct)
-	authGroup.PUT("/products/:id", productHandler.UpdateProduct)
-	authGroup.DELETE("/products/:id", productHandler.DeleteProduct)
+	// Product routes (protected write - admin)
+	authGroup.POST("/products", adminProductHandler.CreateProduct)
+	authGroup.PUT("/products/:id", adminProductHandler.UpdateProduct)
+	authGroup.DELETE("/products/:id", adminProductHandler.DeleteProduct)
 
 	// Review routes (protected write)
-	authGroup.POST("/products/:id/reviews", reviewHandler.CreateReview)
-	authGroup.PUT("/reviews/:id", reviewHandler.UpdateReview)
-	authGroup.DELETE("/reviews/:id", reviewHandler.DeleteReview)
+	authGroup.POST("/products/:id/reviews", customerReviewHandler.CreateReview)
+	authGroup.PUT("/reviews/:id", customerReviewHandler.UpdateReview)
+	authGroup.DELETE("/reviews/:id", customerReviewHandler.DeleteReview)
 
 	// Favorite routes (all protected)
-	authGroup.GET("/users/:id/favorites", favoriteHandler.GetUserFavorites)
-	authGroup.POST("/users/:id/favorites", favoriteHandler.AddFavorite)
-	authGroup.DELETE("/users/:id/favorites/:productId", favoriteHandler.RemoveFavorite)
+	authGroup.GET("/users/:id/favorites", customerFavoriteHandler.GetUserFavorites)
+	authGroup.POST("/users/:id/favorites", customerFavoriteHandler.AddFavorite)
+	authGroup.DELETE("/users/:id/favorites/:productId", customerFavoriteHandler.RemoveFavorite)
 
 	// User routes (protected)
-	authGroup.GET("/users/:id/reviews", reviewHandler.GetUserReviews)
+	authGroup.GET("/users/:id/reviews", customerReviewHandler.GetUserReviews)
 
 	// Start server
 	log.Println("Server starting on :8080")
