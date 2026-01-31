@@ -1,30 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { Admin } from '../../auth/types';
-import { Product } from '../../products/types';
-import { AdminHeader } from './AdminHeader';
-import { mockProducts } from '../../../data/mockData';
-import { ADMIN_CATEGORIES } from '../types';
+import { Loader2 } from 'lucide-react';
+import { Admin } from '../../../auth/types';
+import { useAuth } from '../../../auth';
+import { ApiCategory } from '../../../products/types';
+import { productApi } from '../../../products/api';
+import { adminApi } from '../api';
+import { ProductFormData, ParsedKantanLink, OperationMessage } from '../types';
+import { AdminHeader } from '../../common/components/AdminHeader';
 
 interface AdminProductFormProps {
   admin: Admin;
-  products: Product[];
-  setProducts: (products: Product[]) => void;
 }
 
 // かんたんリンクHTMLからURLを抽出する関数
-function parseKantanLinkHtml(html: string): {
-  imageUrl?: string;
-  amazonUrl?: string;
-  rakutenUrl?: string;
-  yahooUrl?: string;
-} {
-  const result: {
-    imageUrl?: string;
-    amazonUrl?: string;
-    rakutenUrl?: string;
-    yahooUrl?: string;
-  } = {};
+function parseKantanLinkHtml(html: string): ParsedKantanLink {
+  const result: ParsedKantanLink = {};
 
   try {
     const parser = new DOMParser();
@@ -65,57 +56,77 @@ function parseKantanLinkHtml(html: string): {
   return result;
 }
 
-export function AdminProductForm({ admin, products, setProducts }: AdminProductFormProps) {
+export function AdminProductForm({ admin }: AdminProductFormProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { token } = useAuth();
   const isEditMode = !!id;
 
-  const allProducts = products.length > 0 ? products : mockProducts;
-  const existingProduct = id ? allProducts.find(p => p.id === Number(id)) : null;
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     nameJa: '',
     name: '',
-    category: 'Meat Alternatives',
-    categoryJa: '代替肉',
+    categoryIds: [],
     descriptionJa: '',
     description: '',
-    image: '',
+    imageUrl: '',
     amazonUrl: '',
     rakutenUrl: '',
     yahooUrl: ''
   });
 
-  const [kantanLinkHtml, setKantanLinkHtml] = useState('');
-  const [extractMessage, setExtractMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  useEffect(() => {
-    if (existingProduct) {
-      setFormData({
-        nameJa: existingProduct.nameJa,
-        name: existingProduct.name,
-        category: existingProduct.category,
-        categoryJa: existingProduct.categoryJa,
-        descriptionJa: existingProduct.descriptionJa,
-        description: existingProduct.description,
-        image: existingProduct.image,
-        amazonUrl: '',
-        rakutenUrl: '',
-        yahooUrl: ''
-      });
-    }
-  }, [existingProduct]);
-
-  const handleCategoryChange = (categoryEn: string) => {
-    const category = ADMIN_CATEGORIES.find(c => c.en === categoryEn);
-    if (category) {
-      setFormData({
-        ...formData,
-        category: category.en,
-        categoryJa: category.ja
-      });
-    }
+  const toggleCategory = (categoryId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      categoryIds: prev.categoryIds.includes(categoryId)
+        ? prev.categoryIds.filter(id => id !== categoryId)
+        : [...prev.categoryIds, categoryId]
+    }));
   };
+
+  const [kantanLinkHtml, setKantanLinkHtml] = useState('');
+  const [extractMessage, setExtractMessage] = useState<OperationMessage | null>(null);
+
+  // 初期データ取得
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        // カテゴリ一覧を取得
+        const categoriesData = await productApi.getCategories();
+        setCategories(categoriesData);
+
+        // 編集モードの場合、商品データを取得
+        if (isEditMode && id) {
+          const product = await productApi.getProduct(Number(id));
+          setFormData({
+            nameJa: product.nameJa,
+            name: product.name,
+            categoryIds: product.categories.map(c => c.id),
+            descriptionJa: product.descriptionJa,
+            description: product.description,
+            imageUrl: product.imageUrl,
+            amazonUrl: product.amazonUrl || '',
+            rakutenUrl: product.rakutenUrl || '',
+            yahooUrl: product.yahooUrl || ''
+          });
+        }
+
+        setError(null);
+      } catch (err) {
+        setError('データの取得に失敗しました');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [id, isEditMode]);
 
   // かんたんリンクHTMLからURLを抽出
   const handleExtractUrls = () => {
@@ -130,7 +141,7 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
     let extractedCount = 0;
 
     if (extracted.imageUrl) {
-      updates.image = extracted.imageUrl;
+      updates.imageUrl = extracted.imageUrl;
       extractedCount++;
     }
     if (extracted.amazonUrl) {
@@ -160,33 +171,61 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    if (isEditMode && existingProduct) {
-      // Update existing product
-      const updatedProducts = allProducts.map(p =>
-        p.id === Number(id)
-          ? {
-              ...p,
-              ...formData
-            }
-          : p
-      );
-      setProducts(updatedProducts);
-    } else {
-      // Create new product
-      const newProduct: Product = {
-        id: Date.now(),
-        ...formData,
-        rating: 0,
-        reviewCount: 0
-      };
-      setProducts([...allProducts, newProduct]);
+    if (!token) {
+      setError('認証エラー: 再ログインしてください');
+      return;
     }
 
-    navigate('/admin/products');
+    if (formData.categoryIds.length === 0) {
+      setError('少なくとも1つのカテゴリーを選択してください');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      const productData = {
+        name: formData.name,
+        nameJa: formData.nameJa,
+        description: formData.description,
+        descriptionJa: formData.descriptionJa,
+        categoryIds: formData.categoryIds,
+        imageUrl: formData.imageUrl,
+        amazonUrl: formData.amazonUrl || undefined,
+        rakutenUrl: formData.rakutenUrl || undefined,
+        yahooUrl: formData.yahooUrl || undefined
+      };
+
+      if (isEditMode && id) {
+        await adminApi.updateProduct(id, productData, token);
+      } else {
+        await adminApi.createProduct(productData, token);
+      }
+
+      navigate('/admin/products');
+    } catch (err) {
+      setError(isEditMode ? '更新に失敗しました' : '作成に失敗しました');
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  // ローディング表示
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <AdminHeader admin={admin} />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--primary)' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -196,6 +235,12 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
         <h1 className="text-2xl text-gray-900 mb-6">
           {isEditMode ? 'Edit Product' : 'Add New Product'}
         </h1>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* 基本情報セクション */}
@@ -235,19 +280,26 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
               {/* Category */}
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
-                  Category / カテゴリー
+                  Categories / カテゴリー（複数選択可）
                 </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
-                >
-                  {ADMIN_CATEGORIES.map(category => (
-                    <option key={category.en} value={category.en}>
-                      {category.en} / {category.ja}
-                    </option>
+                <div className="border border-gray-300 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+                  {categories.map(category => (
+                    <label key={category.id} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={formData.categoryIds.includes(category.id)}
+                        onChange={() => toggleCategory(category.id)}
+                        className="w-4 h-4 text-[#4A7C59] rounded focus:ring-[#4A7C59]"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {category.name} / {category.nameJa}
+                      </span>
+                    </label>
                   ))}
-                </select>
+                </div>
+                {formData.categoryIds.length === 0 && (
+                  <p className="text-sm text-red-500 mt-1">少なくとも1つのカテゴリーを選択してください</p>
+                )}
               </div>
 
               {/* Description (JA) */}
@@ -308,7 +360,8 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
             <button
               type="button"
               onClick={handleExtractUrls}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all mb-4"
+              className="px-4 py-2 rounded-lg transition-all mb-4"
+              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
             >
               🔍 URLを自動抽出
             </button>
@@ -344,16 +397,16 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
               <input
                 type="url"
                 required
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                value={formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
                 placeholder="https://example.com/image.jpg"
               />
-              {formData.image && (
+              {formData.imageUrl && (
                 <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-2">Preview:</p>
                   <img
-                    src={formData.image}
+                    src={formData.imageUrl}
                     alt="Preview"
                     className="w-48 h-36 object-cover rounded-lg border border-gray-200"
                     onError={(e) => {
@@ -426,9 +479,11 @@ export function AdminProductForm({ admin, products, setProducts }: AdminProductF
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-lg transition-all text-white"
+              disabled={isSaving}
+              className="px-6 py-2 rounded-lg transition-all text-white disabled:opacity-50 flex items-center gap-2"
               style={{ backgroundColor: 'var(--primary)' }}
             >
+              {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
               {isEditMode ? 'Save Changes' : 'Add Product'}
             </button>
           </div>

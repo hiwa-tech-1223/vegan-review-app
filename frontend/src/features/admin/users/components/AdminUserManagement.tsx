@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Ban, CheckCircle, Loader2, Clock } from 'lucide-react';
-import { Admin } from '../../auth/types';
-import { AdminHeader } from './AdminHeader';
+import { Admin } from '../../../auth/types';
+import { AdminHeader } from '../../common/components/AdminHeader';
 import { adminApi } from '../api';
 import { ManagedUser } from '../types';
-import { useAuth } from '../../auth';
+import { useAuth } from '../../../auth';
 
 interface AdminUserManagementProps {
   admin: Admin;

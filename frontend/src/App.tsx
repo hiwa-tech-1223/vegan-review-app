@@ -4,7 +4,6 @@ import { useState } from 'react';
 // Feature imports
 import { AuthProvider, useAuth } from './features/auth';
 import { Review } from './features/reviews/types';
-import { Product } from './features/products/types';
 import { ProductListing, ProductDetail } from './features/products';
 import { UserLogin, AuthCallback } from './features/auth';
 import { MyPage } from './features/users';
@@ -64,7 +63,6 @@ function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { user, admin } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
 
   return (
     <Routes>
@@ -95,11 +93,7 @@ function AppRoutes() {
         path="/admin/products"
         element={
           <ProtectedAdminRoute>
-            <AdminProductManagement
-              admin={admin!}
-              products={products}
-              setProducts={setProducts}
-            />
+            <AdminProductManagement admin={admin!} />
           </ProtectedAdminRoute>
         }
       />
@@ -107,11 +101,7 @@ function AppRoutes() {
         path="/admin/products/new"
         element={
           <ProtectedAdminRoute>
-            <AdminProductForm
-              admin={admin!}
-              products={products}
-              setProducts={setProducts}
-            />
+            <AdminProductForm admin={admin!} />
           </ProtectedAdminRoute>
         }
       />
@@ -119,11 +109,7 @@ function AppRoutes() {
         path="/admin/products/:id/edit"
         element={
           <ProtectedAdminRoute>
-            <AdminProductForm
-              admin={admin!}
-              products={products}
-              setProducts={setProducts}
-            />
+            <AdminProductForm admin={admin!} />
           </ProtectedAdminRoute>
         }
       />

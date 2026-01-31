@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
-import { Admin } from '../../auth/types';
-import { AdminHeader } from './AdminHeader';
-import { productApi } from '../../products/api';
+import { Admin } from '../../../auth/types';
+import { AdminHeader } from '../../common/components/AdminHeader';
+import { productApi } from '../../../products/api';
+import { CategoryFormData } from '../types';
 
 interface AdminCategoryFormProps {
   admin: Admin;
@@ -14,7 +15,7 @@ export function AdminCategoryForm({ admin }: AdminCategoryFormProps) {
   const navigate = useNavigate();
   const isEditMode = !!id;
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     nameJa: ''
   });

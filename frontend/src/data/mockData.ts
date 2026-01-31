@@ -1,4 +1,5 @@
-import { Product, Review } from '../App';
+import { Product } from '../features/products/types';
+import { Review } from '../features/reviews/types';
 
 export const mockProducts: Product[] = [
   {

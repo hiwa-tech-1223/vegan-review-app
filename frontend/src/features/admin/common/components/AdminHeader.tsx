@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
-import { Admin } from '../../auth/types';
+import { Admin } from '../../../auth/types';
 
 interface AdminHeaderProps {
   admin: Admin;

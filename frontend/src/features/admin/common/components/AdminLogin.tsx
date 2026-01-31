@@ -1,7 +1,7 @@
 import { useSearchParams, Navigate } from 'react-router';
 import { Shield } from 'lucide-react';
-import { useAuth } from '../../auth';
-import { authApi } from '../../auth/api';
+import { useAuth } from '../../../auth';
+import { authApi } from '../../../auth/api';
 
 export function AdminLogin() {
   const { admin, isAdmin } = useAuth();

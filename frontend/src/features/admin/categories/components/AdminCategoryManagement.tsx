@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Plus, Search, Edit2, Trash2, Loader2 } from 'lucide-react';
-import { Admin } from '../../auth/types';
-import { AdminHeader } from './AdminHeader';
-import { productApi } from '../../products/api';
-import { Category } from '../../products/types';
+import { Admin } from '../../../auth/types';
+import { AdminHeader } from '../../common/components/AdminHeader';
+import { productApi } from '../../../products/api';
+import { Category } from '../../../products/types';
 
 interface AdminCategoryManagementProps {
   admin: Admin;

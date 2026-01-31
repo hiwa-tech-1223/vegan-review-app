@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Search, Trash2 } from 'lucide-react';
-import { Admin } from '../../auth/types';
-import { Review } from '../../reviews/types';
-import { mockProducts, mockReviews } from '../../../data/mockData';
-import { AdminHeader } from './AdminHeader';
-import { StarRating } from '../../../components/StarRating';
+import { Admin } from '../../../auth/types';
+import { Review } from '../../../reviews/types';
+import { mockProducts, mockReviews } from '../../../../data/mockData';
+import { AdminHeader } from '../../common/components/AdminHeader';
+import { StarRating } from '../../../../components/StarRating';
 
 interface AdminReviewManagementProps {
   admin: Admin;
