@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"backend/domain/entity"
+	"backend/interfaces/dto"
 	adminusecase "backend/usecase/admin"
 
 	"github.com/labstack/echo/v4"
@@ -22,18 +22,34 @@ func NewAdminProductHandler(adminProductUsecase *adminusecase.AdminProductUsecas
 
 // CreateProduct - 商品作成
 func (h *AdminProductHandler) CreateProduct(c echo.Context) error {
-	product := new(entity.Product)
-	if err := c.Bind(product); err != nil {
+	var req dto.CreateProductRequest
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	var adminID *int64
 	if isAdmin := c.Get("isAdmin").(bool); isAdmin {
 		userID := c.Get("userId").(int64)
-		product.CreatedByAdminID = &userID
+		adminID = &userID
 	}
 
-	if err := h.adminProductUsecase.CreateProduct(product); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	input := adminusecase.CreateProductInput{
+		Name:             req.Name,
+		NameJa:           req.NameJa,
+		Description:      req.Description,
+		DescriptionJa:    req.DescriptionJa,
+		ImageURL:         req.ImageURL,
+		AffiliateURL:     req.AffiliateURL,
+		AmazonURL:        req.AmazonURL,
+		RakutenURL:       req.RakutenURL,
+		YahooURL:         req.YahooURL,
+		CategoryIDs:      req.CategoryIDs,
+		CreatedByAdminID: adminID,
+	}
+
+	product, err := h.adminProductUsecase.CreateProduct(input)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusCreated, product)
 }
@@ -46,22 +62,34 @@ func (h *AdminProductHandler) UpdateProduct(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
 	}
 
-	product, err := h.adminProductUsecase.GetProduct(id)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "Product not found"})
-	}
-
-	if err := c.Bind(product); err != nil {
+	var req dto.UpdateProductRequest
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	var adminID *int64
 	if isAdmin := c.Get("isAdmin").(bool); isAdmin {
 		userID := c.Get("userId").(int64)
-		product.UpdatedByAdminID = &userID
+		adminID = &userID
 	}
 
-	if err := h.adminProductUsecase.UpdateProduct(product); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	input := adminusecase.UpdateProductInput{
+		Name:             req.Name,
+		NameJa:           req.NameJa,
+		Description:      req.Description,
+		DescriptionJa:    req.DescriptionJa,
+		ImageURL:         req.ImageURL,
+		AffiliateURL:     req.AffiliateURL,
+		AmazonURL:        req.AmazonURL,
+		RakutenURL:       req.RakutenURL,
+		YahooURL:         req.YahooURL,
+		CategoryIDs:      req.CategoryIDs,
+		UpdatedByAdminID: adminID,
+	}
+
+	product, err := h.adminProductUsecase.UpdateProduct(id, input)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, product)
 }
