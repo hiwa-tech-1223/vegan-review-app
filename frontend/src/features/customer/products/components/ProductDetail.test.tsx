@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { render } from '../../../test/utils';
+import { render } from '../../../../test/utils';
 import { ProductDetail } from './ProductDetail';
 import { productApi } from '../api';
 import { reviewApi } from '../../reviews';
@@ -44,7 +44,7 @@ vi.mock('../../users', () => ({
 
 // useAuth モック
 const mockUseAuth = vi.fn();
-vi.mock('../../auth', () => ({
+vi.mock('../../../auth', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
@@ -57,6 +57,9 @@ const mockProduct: ApiProduct = {
   descriptionJa: '植物性バーガーパティ',
   imageUrl: 'https://example.com/burger.jpg',
   affiliateUrl: null,
+  amazonUrl: null,
+  rakutenUrl: null,
+  yahooUrl: null,
   categories: [
     { id: 1, name: 'Meat Alternatives', nameJa: '代替肉' },
     { id: 2, name: 'Snacks', nameJa: 'スナック' },
@@ -287,7 +290,7 @@ describe('ProductDetail', () => {
         productId: 1,
         userId: 1,
         rating: 5,
-        comment: 'Amazing!',
+        comment: 'Amazing product, highly recommend!',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
@@ -301,9 +304,9 @@ describe('ProductDetail', () => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
       });
 
-      // コメント入力
+      // コメント入力（10文字以上必要）
       const commentInput = screen.getByPlaceholderText(/Share your experience/i);
-      await user.type(commentInput, 'Amazing!');
+      await user.type(commentInput, 'Amazing product, highly recommend!');
 
       // 投稿ボタンをクリック
       const submitButton = screen.getByRole('button', { name: /Submit Review/i });
@@ -312,14 +315,14 @@ describe('ProductDetail', () => {
       await waitFor(() => {
         expect(reviewApi.createReview).toHaveBeenCalledWith(
           1,
-          { rating: 5, comment: 'Amazing!' },
+          { rating: 5, comment: 'Amazing product, highly recommend!' },
           'test-token'
         );
       });
 
       // 新しいレビューが表示される（テキストエリアとレビューリストの両方に表示される）
       await waitFor(() => {
-        const amazingTexts = screen.getAllByText('Amazing!');
+        const amazingTexts = screen.getAllByText('Amazing product, highly recommend!');
         // テキストエリア（編集モード用）とレビューリストの2箇所に表示される
         expect(amazingTexts.length).toBeGreaterThanOrEqual(2);
       });
@@ -345,7 +348,7 @@ describe('ProductDetail', () => {
         productId: 1,
         userId: 1,
         rating: 3,
-        comment: 'OK',
+        comment: 'It was okay, nothing special',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
@@ -368,9 +371,9 @@ describe('ProductDetail', () => {
         await user.click(ratingButtons[2]);
       }
 
-      // コメント入力
+      // コメント入力（10文字以上必要）
       const commentInput = screen.getByPlaceholderText(/Share your experience/i);
-      await user.type(commentInput, 'OK');
+      await user.type(commentInput, 'It was okay, nothing special');
 
       // 投稿
       const submitButton = screen.getByRole('button', { name: /Submit Review/i });
@@ -379,7 +382,7 @@ describe('ProductDetail', () => {
       await waitFor(() => {
         expect(reviewApi.createReview).toHaveBeenCalledWith(
           1,
-          { rating: 3, comment: 'OK' },
+          { rating: 3, comment: 'It was okay, nothing special' },
           'test-token'
         );
       });

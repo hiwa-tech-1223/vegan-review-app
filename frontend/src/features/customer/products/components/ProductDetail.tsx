@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ArrowLeft, Heart, Leaf, Loader2, ExternalLink } from 'lucide-react';
-import { useAuth } from '../../auth';
+import { useAuth } from '../../../auth';
 import { productApi } from '../api';
 import { ApiProduct } from '../types';
 import { reviewApi, ApiReview } from '../../reviews';
 import { userApi } from '../../users';
-import { StarRating } from '../../../components/StarRating';
+import { StarRating } from '../../../../components/StarRating';
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();

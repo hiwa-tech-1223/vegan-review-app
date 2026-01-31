@@ -3,8 +3,8 @@ import { Link } from 'react-router';
 import { Plus, Search, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { Admin } from '../../../auth/types';
 import { useAuth } from '../../../auth';
-import { ApiProduct, ApiCategory } from '../../../products/types';
-import { productApi } from '../../../products/api';
+import { ApiProduct, ApiCategory } from '../../../customer/products/types';
+import { productApi } from '../../../customer/products/api';
 import { adminApi } from '../api';
 import { AdminHeader } from '../../common/components/AdminHeader';
 

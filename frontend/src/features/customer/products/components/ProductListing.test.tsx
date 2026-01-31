@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { render } from '../../../test/utils';
+import { render } from '../../../../test/utils';
 import { ProductListing } from './ProductListing';
 import { productApi } from '../api';
 import { ApiProduct, ApiCategory } from '../types';
@@ -30,6 +30,9 @@ const mockProducts: ApiProduct[] = [
     descriptionJa: '植物性バーガー',
     imageUrl: 'https://example.com/burger.jpg',
     affiliateUrl: null,
+    amazonUrl: null,
+    rakutenUrl: null,
+    yahooUrl: null,
     categories: [mockCategories[0], mockCategories[2]], // 代替肉 + スナック
     rating: 4.5,
     reviewCount: 120,
@@ -44,6 +47,9 @@ const mockProducts: ApiProduct[] = [
     descriptionJa: 'クリーミーなオーツミルク',
     imageUrl: 'https://example.com/oatmilk.jpg',
     affiliateUrl: null,
+    amazonUrl: null,
+    rakutenUrl: null,
+    yahooUrl: null,
     categories: [mockCategories[1]],
     rating: 4.2,
     reviewCount: 80,
@@ -58,6 +64,9 @@ const mockProducts: ApiProduct[] = [
     descriptionJa: '乳製品不使用チーズ',
     imageUrl: 'https://example.com/cheese.jpg',
     affiliateUrl: null,
+    amazonUrl: null,
+    rakutenUrl: null,
+    yahooUrl: null,
     categories: [mockCategories[1]],
     rating: 3.8,
     reviewCount: 45,
@@ -75,6 +84,9 @@ const mockManyProducts: ApiProduct[] = Array.from({ length: 8 }, (_, i) => ({
   descriptionJa: `説明 ${i + 1}`,
   imageUrl: `https://example.com/product${i + 1}.jpg`,
   affiliateUrl: null,
+  amazonUrl: null,
+  rakutenUrl: null,
+  yahooUrl: null,
   categories: [mockCategories[0]],
   rating: 4.0,
   reviewCount: 10 + i,

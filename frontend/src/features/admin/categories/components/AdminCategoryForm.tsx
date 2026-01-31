@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { Admin } from '../../../auth/types';
 import { AdminHeader } from '../../common/components/AdminHeader';
-import { productApi } from '../../../products/api';
+import { productApi } from '../../../customer/products/api';
 import { CategoryFormData } from '../types';
 
 interface AdminCategoryFormProps {

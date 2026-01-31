@@ -3,9 +3,9 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { render } from '../../../../test/utils';
 import { AdminProductForm } from './AdminProductForm';
-import { productApi } from '../../../products/api';
+import { productApi } from '../../../customer/products/api';
 import { adminApi } from '../api';
-import { ApiCategory } from '../../../products/types';
+import { ApiCategory } from '../../../customer/products/types';
 
 // React Router のモック
 const mockNavigate = vi.fn();
@@ -20,7 +20,7 @@ vi.mock('react-router', async () => {
 });
 
 // API モック
-vi.mock('../../../products/api', () => ({
+vi.mock('../../../customer/products/api', () => ({
   productApi: {
     getCategories: vi.fn(),
     getProduct: vi.fn(),

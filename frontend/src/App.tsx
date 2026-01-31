@@ -3,10 +3,10 @@ import { useState } from 'react';
 
 // Feature imports
 import { AuthProvider, useAuth } from './features/auth';
-import { Review } from './features/reviews/types';
-import { ProductListing, ProductDetail } from './features/products';
+import { Review } from './features/customer/reviews/types';
+import { ProductListing, ProductDetail } from './features/customer/products';
 import { UserLogin, AuthCallback } from './features/auth';
-import { MyPage } from './features/users';
+import { MyPage } from './features/customer/users';
 import {
   AdminLogin,
   AdminAuthCallback,

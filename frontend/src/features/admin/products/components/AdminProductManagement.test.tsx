@@ -3,12 +3,12 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { render } from '../../../../test/utils';
 import { AdminProductManagement } from './AdminProductManagement';
-import { productApi } from '../../../products/api';
+import { productApi } from '../../../customer/products/api';
 import { adminApi } from '../api';
-import { ApiProduct, ApiCategory } from '../../../products/types';
+import { ApiProduct, ApiCategory } from '../../../customer/products/types';
 
 // API モック
-vi.mock('../../../products/api', () => ({
+vi.mock('../../../customer/products/api', () => ({
   productApi: {
     getProducts: vi.fn(),
     getCategories: vi.fn(),

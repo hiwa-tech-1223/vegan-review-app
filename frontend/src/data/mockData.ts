@@ -1,5 +1,5 @@
-import { Product } from '../features/products/types';
-import { Review } from '../features/reviews/types';
+import { Product } from '../features/customer/products/types';
+import { Review } from '../features/customer/reviews/types';
 
 export const mockProducts: Product[] = [
   {

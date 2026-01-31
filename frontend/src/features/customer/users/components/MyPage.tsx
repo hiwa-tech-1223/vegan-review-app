@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { Leaf, LogOut, Trash2, X } from 'lucide-react';
-import { useAuth } from '../../auth';
+import { useAuth } from '../../../auth';
 import { userApi } from '../api';
 import { reviewApi } from '../../reviews/api';
 import { ApiFavorite } from '../types';
 import { ApiReview } from '../../reviews/types';
-import { StarRating } from '../../../components/StarRating';
+import { StarRating } from '../../../../components/StarRating';
 
 export function MyPage() {
   const navigate = useNavigate();

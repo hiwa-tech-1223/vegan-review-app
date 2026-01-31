@@ -3,8 +3,8 @@ import { Link } from 'react-router';
 import { Search, Leaf, User, Loader2 } from 'lucide-react';
 import { productApi } from '../api';
 import { ApiProduct, ApiCategory } from '../types';
-import { User as UserType } from '../../auth/types';
-import { StarRating } from '../../../components/StarRating';
+import { User as UserType } from '../../../auth/types';
+import { StarRating } from '../../../../components/StarRating';
 
 interface ProductListingProps {
   user: UserType | null;
