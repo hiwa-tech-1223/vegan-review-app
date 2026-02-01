@@ -52,6 +52,7 @@ func main() {
 	favoriteUsecase := usecase.NewFavoriteUsecase(favoriteRepo)
 	adminProductUsecase := adminusecase.NewAdminProductUsecase(productRepo, categoryRepo)
 	adminCategoryUsecase := adminusecase.NewAdminCategoryUsecase(categoryRepo)
+	adminCustomerUsecase := adminusecase.NewAdminCustomerUsecase(customerRepo)
 	adminReviewUsecase := adminusecase.NewAdminReviewUsecase(reviewRepo, productRepo)
 	customerProductUsecase := customerusecase.NewProductUsecase(productRepo, categoryRepo)
 	customerReviewUsecase := customerusecase.NewReviewUsecase(reviewRepo, productRepo)
@@ -60,6 +61,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(authUsecase, oauthService, jwtService, cfg.FrontendURL)
 	adminProductHandler := adminhandler.NewAdminProductHandler(adminProductUsecase)
 	adminCategoryHandler := adminhandler.NewAdminCategoryHandler(adminCategoryUsecase)
+	adminCustomerHandler := adminhandler.NewAdminCustomerHandler(adminCustomerUsecase)
 	adminReviewHandler := adminhandler.NewAdminReviewHandler(adminReviewUsecase)
 	customerProductHandler := customerhandler.NewProductHandler(customerProductUsecase)
 	customerReviewHandler := customerhandler.NewReviewHandler(customerReviewUsecase)
@@ -114,6 +116,12 @@ func main() {
 	authGroup.POST("/categories", adminCategoryHandler.CreateCategory)
 	authGroup.PUT("/categories/:id", adminCategoryHandler.UpdateCategory)
 	authGroup.DELETE("/categories/:id", adminCategoryHandler.DeleteCategory)
+
+	// Customer routes (admin)
+	authGroup.GET("/admin/customers", adminCustomerHandler.GetAllCustomers)
+	authGroup.POST("/admin/customers/:id/ban", adminCustomerHandler.BanCustomer)
+	authGroup.POST("/admin/customers/:id/suspend", adminCustomerHandler.SuspendCustomer)
+	authGroup.POST("/admin/customers/:id/unban", adminCustomerHandler.UnbanCustomer)
 
 	// Review routes (admin)
 	authGroup.GET("/reviews", adminReviewHandler.GetAllReviews)

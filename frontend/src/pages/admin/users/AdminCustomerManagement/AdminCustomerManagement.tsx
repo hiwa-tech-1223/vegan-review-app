@@ -56,9 +56,10 @@ export function AdminCustomerManagement({ admin }: AdminCustomerManagementProps)
 
   const confirmBan = async () => {
     if (!selectedCustomer || !adminToken) return;
+    if (!banReason.trim()) return;
     try {
-      const updatedCustomer = await adminApi.banCustomer(selectedCustomer.id, banReason, adminToken);
-      setCustomers(customers.map(c => c.id === selectedCustomer.id ? updatedCustomer : c));
+      const updated = await adminApi.banCustomer(selectedCustomer.id, banReason, adminToken);
+      setCustomers(customers.map(c => c.id === selectedCustomer.id ? { ...c, status: updated.status, statusReason: updated.statusReason, suspendedUntil: updated.suspendedUntil } : c));
       setShowBanModal(false);
       setSelectedCustomer(null);
       setBanReason('');
@@ -71,8 +72,8 @@ export function AdminCustomerManagement({ admin }: AdminCustomerManagementProps)
     if (!adminToken) return;
     if (confirm('このカスタマーのBAN/停止を解除しますか？\n\nAre you sure you want to unban/unsuspend this customer?')) {
       try {
-        const updatedCustomer = await adminApi.unbanCustomer(customerId, adminToken);
-        setCustomers(customers.map(c => c.id === customerId ? updatedCustomer : c));
+        const updated = await adminApi.unbanCustomer(customerId, adminToken);
+        setCustomers(customers.map(c => c.id === customerId ? { ...c, status: updated.status, statusReason: updated.statusReason, suspendedUntil: updated.suspendedUntil } : c));
       } catch (err) {
         console.error('Failed to unban customer:', err);
       }
@@ -88,14 +89,10 @@ export function AdminCustomerManagement({ admin }: AdminCustomerManagementProps)
 
   const confirmSuspend = async () => {
     if (!selectedCustomer || !adminToken) return;
+    if (!suspendReason.trim()) return;
     try {
-      // TODO: API連携時に実装（suspendCustomer APIを追加）
-      const updatedCustomer: ManagedCustomer = {
-        ...selectedCustomer,
-        status: 'suspended',
-        statusReason: `${suspendDuration}日間停止: ${suspendReason}`
-      };
-      setCustomers(customers.map(c => c.id === selectedCustomer.id ? updatedCustomer : c));
+      const updated = await adminApi.suspendCustomer(selectedCustomer.id, suspendDuration, suspendReason, adminToken);
+      setCustomers(customers.map(c => c.id === selectedCustomer.id ? { ...c, status: updated.status, statusReason: updated.statusReason, suspendedUntil: updated.suspendedUntil } : c));
       setShowSuspendModal(false);
       setSelectedCustomer(null);
       setSuspendReason('');
@@ -317,7 +314,8 @@ export function AdminCustomerManagement({ admin }: AdminCustomerManagementProps)
               </button>
               <button
                 onClick={confirmBan}
-                className="px-4 py-2 rounded-lg transition-all"
+                disabled={!banReason.trim()}
+                className="px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#dc2626', color: 'white' }}
               >
                 BAN
@@ -386,7 +384,8 @@ export function AdminCustomerManagement({ admin }: AdminCustomerManagementProps)
               </button>
               <button
                 onClick={confirmSuspend}
-                className="px-4 py-2 rounded-lg transition-all"
+                disabled={!suspendReason.trim()}
+                className="px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#ca8a04', color: 'white' }}
               >
                 一時停止 / Suspend
