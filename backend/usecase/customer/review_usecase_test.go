@@ -1,8 +1,8 @@
 package customerusecase
 
 import (
-	"backend/domain/entity"
-	"backend/domain/valueobject"
+	"backend/domain/product"
+	"backend/domain/review"
 	"errors"
 	"testing"
 )
@@ -10,17 +10,17 @@ import (
 // ===== Mock Repositories =====
 
 type mockReviewRepository struct {
-	reviews                    []entity.Review
-	findByIDFunc               func(id int64) (*entity.Review, error)
-	findByProductIDAndUserFunc func(productID, userID int64) (*entity.Review, error)
-	createFunc                 func(review *entity.Review) error
-	updateFunc                 func(review *entity.Review) error
+	reviews                    []review.Review
+	findByIDFunc               func(id int64) (*review.Review, error)
+	findByProductIDAndUserFunc func(productID, userID int64) (*review.Review, error)
+	createFunc                 func(r *review.Review) error
+	updateFunc                 func(r *review.Review) error
 	deleteFunc                 func(id int64) error
 	getRatingStatsFunc         func(productID int64) (float64, int64, error)
 }
 
-func (m *mockReviewRepository) FindByProductID(productID int64) ([]entity.Review, error) {
-	var result []entity.Review
+func (m *mockReviewRepository) FindByProductID(productID int64) ([]review.Review, error) {
+	var result []review.Review
 	for _, r := range m.reviews {
 		if r.ProductID == productID {
 			result = append(result, r)
@@ -29,8 +29,8 @@ func (m *mockReviewRepository) FindByProductID(productID int64) ([]entity.Review
 	return result, nil
 }
 
-func (m *mockReviewRepository) FindByUserID(userID int64) ([]entity.Review, error) {
-	var result []entity.Review
+func (m *mockReviewRepository) FindByUserID(userID int64) ([]review.Review, error) {
+	var result []review.Review
 	for _, r := range m.reviews {
 		if r.UserID == userID {
 			result = append(result, r)
@@ -39,7 +39,7 @@ func (m *mockReviewRepository) FindByUserID(userID int64) ([]entity.Review, erro
 	return result, nil
 }
 
-func (m *mockReviewRepository) FindByID(id int64) (*entity.Review, error) {
+func (m *mockReviewRepository) FindByID(id int64) (*review.Review, error) {
 	if m.findByIDFunc != nil {
 		return m.findByIDFunc(id)
 	}
@@ -51,23 +51,23 @@ func (m *mockReviewRepository) FindByID(id int64) (*entity.Review, error) {
 	return nil, errors.New("not found")
 }
 
-func (m *mockReviewRepository) FindByProductIDAndUserID(productID, userID int64) (*entity.Review, error) {
+func (m *mockReviewRepository) FindByProductIDAndUserID(productID, userID int64) (*review.Review, error) {
 	if m.findByProductIDAndUserFunc != nil {
 		return m.findByProductIDAndUserFunc(productID, userID)
 	}
 	return nil, errors.New("not found")
 }
 
-func (m *mockReviewRepository) Create(review *entity.Review) error {
+func (m *mockReviewRepository) Create(r *review.Review) error {
 	if m.createFunc != nil {
-		return m.createFunc(review)
+		return m.createFunc(r)
 	}
 	return nil
 }
 
-func (m *mockReviewRepository) Update(review *entity.Review) error {
+func (m *mockReviewRepository) Update(r *review.Review) error {
 	if m.updateFunc != nil {
-		return m.updateFunc(review)
+		return m.updateFunc(r)
 	}
 	return nil
 }
@@ -95,19 +95,19 @@ type mockProductRepository struct {
 	}
 }
 
-func (m *mockProductRepository) FindAll(categoryID int64, search string) ([]entity.Product, error) {
+func (m *mockProductRepository) FindAll(categoryID int64, search string) ([]product.Product, error) {
 	return nil, nil
 }
 
-func (m *mockProductRepository) FindByID(id int64) (*entity.Product, error) {
+func (m *mockProductRepository) FindByID(id int64) (*product.Product, error) {
 	return nil, nil
 }
 
-func (m *mockProductRepository) Create(product *entity.Product) error {
+func (m *mockProductRepository) Create(p *product.Product) error {
 	return nil
 }
 
-func (m *mockProductRepository) Update(product *entity.Product) error {
+func (m *mockProductRepository) Update(p *product.Product) error {
 	return nil
 }
 
@@ -129,13 +129,13 @@ func (m *mockProductRepository) UpdateRating(productID int64, rating float64, co
 
 // ===== Helper functions =====
 
-func mustRating(value int) valueobject.Rating {
-	r, _ := valueobject.NewRating(value)
+func mustRating(value int) review.Rating {
+	r, _ := review.NewRating(value)
 	return r
 }
 
-func mustComment(value string) valueobject.Comment {
-	c, _ := valueobject.NewComment(value)
+func mustComment(value string) review.Comment {
+	c, _ := review.NewComment(value)
 	return c
 }
 
@@ -148,7 +148,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 		userID           int64
 		rating           int
 		comment          string
-		existingReview   *entity.Review
+		existingReview   *review.Review
 		createErr        error
 		wantErr          string
 		wantRatingUpdate bool
@@ -169,7 +169,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 			userID:    1,
 			rating:    5,
 			comment:   "Another review text here",
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -213,13 +213,13 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockReviewRepo := &mockReviewRepository{
-				findByProductIDAndUserFunc: func(productID, userID int64) (*entity.Review, error) {
+				findByProductIDAndUserFunc: func(productID, userID int64) (*review.Review, error) {
 					if tc.existingReview != nil {
 						return tc.existingReview, nil
 					}
 					return nil, errors.New("not found")
 				},
-				createFunc: func(review *entity.Review) error {
+				createFunc: func(r *review.Review) error {
 					return tc.createErr
 				},
 			}
@@ -260,7 +260,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 		reviewID         int64
 		requestUserID    int64
 		isAdmin          bool
-		existingReview   *entity.Review
+		existingReview   *review.Review
 		deleteErr        error
 		wantErr          string
 		wantRatingUpdate bool
@@ -270,7 +270,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 1,
 			isAdmin:       false,
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -283,7 +283,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 100,
 			isAdmin:       true,
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -296,7 +296,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 2,
 			isAdmin:       false,
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -318,7 +318,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 			reviewID:      1,
 			requestUserID: 1,
 			isAdmin:       false,
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -332,7 +332,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockReviewRepo := &mockReviewRepository{
-				findByIDFunc: func(id int64) (*entity.Review, error) {
+				findByIDFunc: func(id int64) (*review.Review, error) {
 					if tc.existingReview != nil && tc.existingReview.ID == id {
 						return tc.existingReview, nil
 					}
@@ -374,7 +374,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 }
 
 func TestReviewUsecase_GetProductReviews(t *testing.T) {
-	mockReviews := []entity.Review{
+	mockReviews := []review.Review{
 		{ID: 1, ProductID: 1, UserID: 1, Rating: mustRating(5)},
 		{ID: 2, ProductID: 1, UserID: 2, Rating: mustRating(4)},
 		{ID: 3, ProductID: 2, UserID: 1, Rating: mustRating(3)},
@@ -408,7 +408,7 @@ func TestReviewUsecase_GetProductReviews(t *testing.T) {
 }
 
 func TestReviewUsecase_GetUserReviews(t *testing.T) {
-	mockReviews := []entity.Review{
+	mockReviews := []review.Review{
 		{ID: 1, ProductID: 1, UserID: 1, Rating: mustRating(5)},
 		{ID: 2, ProductID: 2, UserID: 1, Rating: mustRating(4)},
 		{ID: 3, ProductID: 1, UserID: 2, Rating: mustRating(3)},
@@ -437,7 +437,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 		requestUserID    int64
 		rating           int
 		comment          string
-		existingReview   *entity.Review
+		existingReview   *review.Review
 		updateErr        error
 		wantErr          string
 		wantRatingUpdate bool
@@ -448,7 +448,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			requestUserID: 1,
 			rating:        4,
 			comment:       "Updated comment text",
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -464,7 +464,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			requestUserID: 2,
 			rating:        4,
 			comment:       "Trying to update text",
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -488,7 +488,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			requestUserID: 1,
 			rating:        4,
 			comment:       "Update error test",
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -503,7 +503,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			requestUserID: 1,
 			rating:        0,
 			comment:       "Rating out of range",
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -517,7 +517,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			requestUserID: 1,
 			rating:        4,
 			comment:       "Short",
-			existingReview: &entity.Review{
+			existingReview: &review.Review{
 				ID:        1,
 				ProductID: 1,
 				UserID:    1,
@@ -530,20 +530,20 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockReviewRepo := &mockReviewRepository{
-				findByIDFunc: func(id int64) (*entity.Review, error) {
+				findByIDFunc: func(id int64) (*review.Review, error) {
 					if tc.existingReview != nil && tc.existingReview.ID == id {
 						return tc.existingReview, nil
 					}
 					return nil, errors.New("not found")
 				},
-				updateFunc: func(review *entity.Review) error {
+				updateFunc: func(r *review.Review) error {
 					return tc.updateErr
 				},
 			}
 			mockProductRepo := &mockProductRepository{}
 			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			review, err := uc.UpdateReview(tc.reviewID, tc.requestUserID, tc.rating, tc.comment)
+			r, err := uc.UpdateReview(tc.reviewID, tc.requestUserID, tc.rating, tc.comment)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -562,11 +562,11 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			}
 
 			// 更新後のレビューの値を確認
-			if review.Rating.Int() != tc.rating {
-				t.Errorf("expected rating %d, got %d", tc.rating, review.Rating.Int())
+			if r.Rating.Int() != tc.rating {
+				t.Errorf("expected rating %d, got %d", tc.rating, r.Rating.Int())
 			}
-			if review.Comment.String() != tc.comment {
-				t.Errorf("expected comment %q, got %q", tc.comment, review.Comment.String())
+			if r.Comment.String() != tc.comment {
+				t.Errorf("expected comment %q, got %q", tc.comment, r.Comment.String())
 			}
 
 			// 評価更新が呼ばれたか確認
@@ -582,7 +582,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 func TestReviewUsecase_ValidationErrors(t *testing.T) {
 	t.Run("Rating validation", func(t *testing.T) {
 		mockReviewRepo := &mockReviewRepository{
-			findByProductIDAndUserFunc: func(productID, userID int64) (*entity.Review, error) {
+			findByProductIDAndUserFunc: func(productID, userID int64) (*review.Review, error) {
 				return nil, errors.New("not found")
 			},
 		}
@@ -604,7 +604,7 @@ func TestReviewUsecase_ValidationErrors(t *testing.T) {
 
 	t.Run("Comment validation", func(t *testing.T) {
 		mockReviewRepo := &mockReviewRepository{
-			findByProductIDAndUserFunc: func(productID, userID int64) (*entity.Review, error) {
+			findByProductIDAndUserFunc: func(productID, userID int64) (*review.Review, error) {
 				return nil, errors.New("not found")
 			},
 		}

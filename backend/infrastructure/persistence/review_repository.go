@@ -3,24 +3,24 @@ package persistence
 import (
 	"time"
 
-	"backend/domain/entity"
-	"backend/domain/repository"
-	"backend/domain/valueobject"
+	"backend/domain/product"
+	"backend/domain/review"
+	"backend/domain/user"
 
 	"gorm.io/gorm"
 )
 
 // reviewModel - GORM用のDBモデル（プリミティブ型）
 type reviewModel struct {
-	ID        int64           `gorm:"primaryKey;autoIncrement"`
-	ProductID int64           `gorm:"column:product_id"`
-	Product   *entity.Product `gorm:"foreignKey:ProductID"`
-	UserID    int64           `gorm:"column:user_id"`
-	User      *entity.User    `gorm:"foreignKey:UserID"`
-	Rating    int             `gorm:"column:rating"`
-	Comment   string          `gorm:"column:comment"`
-	CreatedAt time.Time       `gorm:"column:created_at"`
-	UpdatedAt time.Time       `gorm:"column:updated_at"`
+	ID        int64            `gorm:"primaryKey;autoIncrement"`
+	ProductID int64            `gorm:"column:product_id"`
+	Product   *product.Product `gorm:"foreignKey:ProductID"`
+	UserID    int64            `gorm:"column:user_id"`
+	User      *user.User       `gorm:"foreignKey:UserID"`
+	Rating    int              `gorm:"column:rating"`
+	Comment   string           `gorm:"column:comment"`
+	CreatedAt time.Time        `gorm:"column:created_at"`
+	UpdatedAt time.Time        `gorm:"column:updated_at"`
 }
 
 func (reviewModel) TableName() string {
@@ -28,12 +28,12 @@ func (reviewModel) TableName() string {
 }
 
 // toEntity - DBモデル → ドメインEntity変換
-func (m *reviewModel) toEntity() (*entity.Review, error) {
+func (m *reviewModel) toEntity() (*review.Review, error) {
 	// DBからの読み込みなので、既存データはバリデーション済みと仮定
-	rating, _ := valueobject.NewRating(m.Rating)
-	comment, _ := valueobject.NewComment(m.Comment)
+	rating, _ := review.NewRating(m.Rating)
+	comment, _ := review.NewComment(m.Comment)
 
-	review := &entity.Review{
+	r := &review.Review{
 		ID:        m.ID,
 		ProductID: m.ProductID,
 		UserID:    m.UserID,
@@ -45,11 +45,11 @@ func (m *reviewModel) toEntity() (*entity.Review, error) {
 		Product:   m.Product,
 	}
 
-	return review, nil
+	return r, nil
 }
 
 // fromEntity - ドメインEntity → DBモデル変換
-func reviewModelFromEntity(e *entity.Review) *reviewModel {
+func reviewModelFromEntity(e *review.Review) *reviewModel {
 	return &reviewModel{
 		ID:        e.ID,
 		ProductID: e.ProductID,
@@ -66,17 +66,17 @@ type reviewRepository struct {
 }
 
 // NewReviewRepository - レビューリポジトリの生成
-func NewReviewRepository(db *gorm.DB) repository.ReviewRepository {
+func NewReviewRepository(db *gorm.DB) review.ReviewRepository {
 	return &reviewRepository{db: db}
 }
 
-func (r *reviewRepository) FindByProductID(productID int64) ([]entity.Review, error) {
+func (r *reviewRepository) FindByProductID(productID int64) ([]review.Review, error) {
 	var models []reviewModel
 	if err := r.db.Preload("User").Where("product_id = ?", productID).Order("created_at DESC").Find(&models).Error; err != nil {
 		return nil, err
 	}
 
-	reviews := make([]entity.Review, 0, len(models))
+	reviews := make([]review.Review, 0, len(models))
 	for _, m := range models {
 		e, err := m.toEntity()
 		if err != nil {
@@ -87,13 +87,13 @@ func (r *reviewRepository) FindByProductID(productID int64) ([]entity.Review, er
 	return reviews, nil
 }
 
-func (r *reviewRepository) FindByUserID(userID int64) ([]entity.Review, error) {
+func (r *reviewRepository) FindByUserID(userID int64) ([]review.Review, error) {
 	var models []reviewModel
 	if err := r.db.Preload("Product").Preload("Product.Categories").Where("user_id = ?", userID).Order("created_at DESC").Find(&models).Error; err != nil {
 		return nil, err
 	}
 
-	reviews := make([]entity.Review, 0, len(models))
+	reviews := make([]review.Review, 0, len(models))
 	for _, m := range models {
 		e, err := m.toEntity()
 		if err != nil {
@@ -104,7 +104,7 @@ func (r *reviewRepository) FindByUserID(userID int64) ([]entity.Review, error) {
 	return reviews, nil
 }
 
-func (r *reviewRepository) FindByID(id int64) (*entity.Review, error) {
+func (r *reviewRepository) FindByID(id int64) (*review.Review, error) {
 	var model reviewModel
 	if err := r.db.First(&model, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func (r *reviewRepository) FindByID(id int64) (*entity.Review, error) {
 	return model.toEntity()
 }
 
-func (r *reviewRepository) FindByProductIDAndUserID(productID, userID int64) (*entity.Review, error) {
+func (r *reviewRepository) FindByProductIDAndUserID(productID, userID int64) (*review.Review, error) {
 	var model reviewModel
 	if err := r.db.Where("product_id = ? AND user_id = ?", productID, userID).First(&model).Error; err != nil {
 		return nil, err
@@ -120,8 +120,8 @@ func (r *reviewRepository) FindByProductIDAndUserID(productID, userID int64) (*e
 	return model.toEntity()
 }
 
-func (r *reviewRepository) Create(review *entity.Review) error {
-	model := reviewModelFromEntity(review)
+func (r *reviewRepository) Create(rev *review.Review) error {
+	model := reviewModelFromEntity(rev)
 	if err := r.db.Create(model).Error; err != nil {
 		return err
 	}
@@ -136,21 +136,21 @@ func (r *reviewRepository) Create(review *entity.Review) error {
 	if err != nil {
 		return err
 	}
-	*review = *created
+	*rev = *created
 	return nil
 }
 
-func (r *reviewRepository) Update(review *entity.Review) error {
-	if err := r.db.Table("reviews").Where("id = ?", review.ID).Updates(map[string]interface{}{
-		"rating":  review.Rating.Int(),
-		"comment": review.Comment.String(),
+func (r *reviewRepository) Update(rev *review.Review) error {
+	if err := r.db.Table("reviews").Where("id = ?", rev.ID).Updates(map[string]interface{}{
+		"rating":  rev.Rating.Int(),
+		"comment": rev.Comment.String(),
 	}).Error; err != nil {
 		return err
 	}
 
 	// Reload with User
 	var model reviewModel
-	if err := r.db.Preload("User").First(&model, "id = ?", review.ID).Error; err != nil {
+	if err := r.db.Preload("User").First(&model, "id = ?", rev.ID).Error; err != nil {
 		return err
 	}
 
@@ -159,7 +159,7 @@ func (r *reviewRepository) Update(review *entity.Review) error {
 	if err != nil {
 		return err
 	}
-	*review = *updated
+	*rev = *updated
 	return nil
 }
 

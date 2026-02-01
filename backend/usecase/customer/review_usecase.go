@@ -1,20 +1,19 @@
 package customerusecase
 
 import (
-	"backend/domain/entity"
-	"backend/domain/repository"
-	"backend/domain/valueobject"
+	"backend/domain/product"
+	"backend/domain/review"
 	"errors"
 )
 
 // ReviewUsecase - レビューユースケース
 type ReviewUsecase struct {
-	reviewRepo  repository.ReviewRepository
-	productRepo repository.ProductRepository
+	reviewRepo  review.ReviewRepository
+	productRepo product.ProductRepository
 }
 
 // NewReviewUsecase - レビューユースケースの生成
-func NewReviewUsecase(reviewRepo repository.ReviewRepository, productRepo repository.ProductRepository) *ReviewUsecase {
+func NewReviewUsecase(reviewRepo review.ReviewRepository, productRepo product.ProductRepository) *ReviewUsecase {
 	return &ReviewUsecase{
 		reviewRepo:  reviewRepo,
 		productRepo: productRepo,
@@ -22,24 +21,24 @@ func NewReviewUsecase(reviewRepo repository.ReviewRepository, productRepo reposi
 }
 
 // GetProductReviews - 商品のレビュー一覧取得
-func (u *ReviewUsecase) GetProductReviews(productID int64) ([]entity.Review, error) {
+func (u *ReviewUsecase) GetProductReviews(productID int64) ([]review.Review, error) {
 	return u.reviewRepo.FindByProductID(productID)
 }
 
 // GetUserReviews - ユーザーのレビュー一覧取得
-func (u *ReviewUsecase) GetUserReviews(userID int64) ([]entity.Review, error) {
+func (u *ReviewUsecase) GetUserReviews(userID int64) ([]review.Review, error) {
 	return u.reviewRepo.FindByUserID(userID)
 }
 
 // CreateReview - レビュー作成
-func (u *ReviewUsecase) CreateReview(productID, userID int64, ratingValue int, commentValue string) (*entity.Review, error) {
+func (u *ReviewUsecase) CreateReview(productID, userID int64, ratingValue int, commentValue string) (*review.Review, error) {
 	// Value Object作成（バリデーション）
-	rating, err := valueobject.NewRating(ratingValue)
+	rating, err := review.NewRating(ratingValue)
 	if err != nil {
 		return nil, err
 	}
 
-	comment, err := valueobject.NewComment(commentValue)
+	comment, err := review.NewComment(commentValue)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +50,9 @@ func (u *ReviewUsecase) CreateReview(productID, userID int64, ratingValue int, c
 	}
 
 	// Entity作成
-	review := entity.NewReview(productID, userID, rating, comment)
+	r := review.NewReview(productID, userID, rating, comment)
 
-	if err := u.reviewRepo.Create(review); err != nil {
+	if err := u.reviewRepo.Create(r); err != nil {
 		return nil, err
 	}
 
@@ -62,22 +61,22 @@ func (u *ReviewUsecase) CreateReview(productID, userID int64, ratingValue int, c
 		return nil, err
 	}
 
-	return review, nil
+	return r, nil
 }
 
 // DeleteReview - レビュー削除
 func (u *ReviewUsecase) DeleteReview(id, userID int64, isAdmin bool) error {
-	review, err := u.reviewRepo.FindByID(id)
+	r, err := u.reviewRepo.FindByID(id)
 	if err != nil {
 		return errors.New("review not found")
 	}
 
 	// 権限チェック
-	if review.UserID != userID && !isAdmin {
+	if r.UserID != userID && !isAdmin {
 		return errors.New("permission denied")
 	}
 
-	productID := review.ProductID
+	productID := r.ProductID
 	if err := u.reviewRepo.Delete(id); err != nil {
 		return err
 	}
@@ -87,42 +86,42 @@ func (u *ReviewUsecase) DeleteReview(id, userID int64, isAdmin bool) error {
 }
 
 // UpdateReview - レビュー更新
-func (u *ReviewUsecase) UpdateReview(id, userID int64, ratingValue int, commentValue string) (*entity.Review, error) {
+func (u *ReviewUsecase) UpdateReview(id, userID int64, ratingValue int, commentValue string) (*review.Review, error) {
 	// Value Object作成（バリデーション）
-	rating, err := valueobject.NewRating(ratingValue)
+	rating, err := review.NewRating(ratingValue)
 	if err != nil {
 		return nil, err
 	}
 
-	comment, err := valueobject.NewComment(commentValue)
+	comment, err := review.NewComment(commentValue)
 	if err != nil {
 		return nil, err
 	}
 
-	review, err := u.reviewRepo.FindByID(id)
+	r, err := u.reviewRepo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("review not found")
 	}
 
 	// 権限チェック（自分のレビューのみ編集可能）
-	if review.UserID != userID {
+	if r.UserID != userID {
 		return nil, errors.New("permission denied")
 	}
 
 	// 値を更新
-	review.Rating = rating
-	review.Comment = comment
+	r.Rating = rating
+	r.Comment = comment
 
-	if err := u.reviewRepo.Update(review); err != nil {
+	if err := u.reviewRepo.Update(r); err != nil {
 		return nil, err
 	}
 
 	// 商品の評価を更新
-	if err := u.updateProductRating(review.ProductID); err != nil {
+	if err := u.updateProductRating(r.ProductID); err != nil {
 		return nil, err
 	}
 
-	return review, nil
+	return r, nil
 }
 
 // updateProductRating - 商品の評価を更新

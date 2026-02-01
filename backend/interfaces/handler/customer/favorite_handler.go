@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"backend/domain/entity"
+	"backend/domain/favorite"
 	"backend/usecase"
 
 	"github.com/labstack/echo/v4"
@@ -48,13 +48,13 @@ func (h *FavoriteHandler) AddFavorite(c echo.Context) error {
 	}
 	requestUserID := c.Get("userId").(int64)
 
-	favorite := new(entity.Favorite)
-	if err := c.Bind(favorite); err != nil {
+	fav := new(favorite.Favorite)
+	if err := c.Bind(fav); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	favorite.UserID = userID
+	fav.UserID = userID
 
-	if err := h.favoriteUsecase.AddFavorite(favorite, requestUserID); err != nil {
+	if err := h.favoriteUsecase.AddFavorite(fav, requestUserID); err != nil {
 		switch err.Error() {
 		case "permission denied":
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
@@ -64,7 +64,7 @@ func (h *FavoriteHandler) AddFavorite(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 	}
-	return c.JSON(http.StatusCreated, favorite)
+	return c.JSON(http.StatusCreated, fav)
 }
 
 // RemoveFavorite - お気に入り削除

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"backend/domain/entity"
+	"backend/domain/user"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -59,14 +59,14 @@ func (s *OAuthService) ExchangeAdmin(ctx context.Context, code string) (*oauth2.
 }
 
 // GetUserInfo - Googleからユーザー情報を取得
-func (s *OAuthService) GetUserInfo(accessToken string) (*entity.GoogleUserInfo, error) {
+func (s *OAuthService) GetUserInfo(accessToken string) (*user.GoogleUserInfo, error) {
 	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var userInfo entity.GoogleUserInfo
+	var userInfo user.GoogleUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
 		return nil, err
 	}

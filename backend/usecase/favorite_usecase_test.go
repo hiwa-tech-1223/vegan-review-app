@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"backend/domain/entity"
+	"backend/domain/favorite"
 	"errors"
 	"testing"
 )
@@ -9,30 +9,30 @@ import (
 // ===== Mock Repository =====
 
 type mockFavoriteRepository struct {
-	favorites             []entity.Favorite
-	findByUserIDFunc      func(userID int64) ([]entity.Favorite, error)
-	findByUserIDAndProdFunc func(userID, productID int64) (*entity.Favorite, error)
-	createFunc            func(favorite *entity.Favorite) error
-	deleteFunc            func(userID, productID int64) error
+	favorites               []favorite.Favorite
+	findByUserIDFunc        func(userID int64) ([]favorite.Favorite, error)
+	findByUserIDAndProdFunc func(userID, productID int64) (*favorite.Favorite, error)
+	createFunc              func(fav *favorite.Favorite) error
+	deleteFunc              func(userID, productID int64) error
 }
 
-func (m *mockFavoriteRepository) FindByUserID(userID int64) ([]entity.Favorite, error) {
+func (m *mockFavoriteRepository) FindByUserID(userID int64) ([]favorite.Favorite, error) {
 	if m.findByUserIDFunc != nil {
 		return m.findByUserIDFunc(userID)
 	}
 	return m.favorites, nil
 }
 
-func (m *mockFavoriteRepository) FindByUserIDAndProductID(userID, productID int64) (*entity.Favorite, error) {
+func (m *mockFavoriteRepository) FindByUserIDAndProductID(userID, productID int64) (*favorite.Favorite, error) {
 	if m.findByUserIDAndProdFunc != nil {
 		return m.findByUserIDAndProdFunc(userID, productID)
 	}
 	return nil, errors.New("not found")
 }
 
-func (m *mockFavoriteRepository) Create(favorite *entity.Favorite) error {
+func (m *mockFavoriteRepository) Create(fav *favorite.Favorite) error {
 	if m.createFunc != nil {
-		return m.createFunc(favorite)
+		return m.createFunc(fav)
 	}
 	return nil
 }
@@ -51,7 +51,7 @@ func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
 		name          string
 		userID        int64
 		requestUserID int64
-		mockFavorites []entity.Favorite
+		mockFavorites []favorite.Favorite
 		wantErr       string
 		wantCount     int
 	}{
@@ -59,7 +59,7 @@ func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
 			name:          "自分のお気に入りを取得できる",
 			userID:        1,
 			requestUserID: 1,
-			mockFavorites: []entity.Favorite{
+			mockFavorites: []favorite.Favorite{
 				{ID: 1, UserID: 1, ProductID: 1},
 				{ID: 2, UserID: 1, ProductID: 2},
 			},
@@ -77,7 +77,7 @@ func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
 			name:          "お気に入りが0件でも正常に取得できる",
 			userID:        1,
 			requestUserID: 1,
-			mockFavorites: []entity.Favorite{},
+			mockFavorites: []favorite.Favorite{},
 			wantErr:       "",
 			wantCount:     0,
 		},
@@ -118,15 +118,15 @@ func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
 func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 	testCases := []struct {
 		name          string
-		favorite      *entity.Favorite
+		fav           *favorite.Favorite
 		requestUserID int64
-		existingFav   *entity.Favorite
+		existingFav   *favorite.Favorite
 		repoErr       error
 		wantErr       string
 	}{
 		{
 			name: "自分のアカウントにお気に入りを追加できる",
-			favorite: &entity.Favorite{
+			fav: &favorite.Favorite{
 				UserID:    1,
 				ProductID: 1,
 			},
@@ -136,7 +136,7 @@ func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 		},
 		{
 			name: "他ユーザーのアカウントには追加できない",
-			favorite: &entity.Favorite{
+			fav: &favorite.Favorite{
 				UserID:    2,
 				ProductID: 1,
 			},
@@ -145,12 +145,12 @@ func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 		},
 		{
 			name: "既に追加済みの商品は追加できない",
-			favorite: &entity.Favorite{
+			fav: &favorite.Favorite{
 				UserID:    1,
 				ProductID: 1,
 			},
 			requestUserID: 1,
-			existingFav: &entity.Favorite{
+			existingFav: &favorite.Favorite{
 				ID:        1,
 				UserID:    1,
 				ProductID: 1,
@@ -159,7 +159,7 @@ func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 		},
 		{
 			name: "リポジトリエラー時はエラーを返す",
-			favorite: &entity.Favorite{
+			fav: &favorite.Favorite{
 				UserID:    1,
 				ProductID: 1,
 			},
@@ -173,19 +173,19 @@ func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepo := &mockFavoriteRepository{
-				findByUserIDAndProdFunc: func(userID, productID int64) (*entity.Favorite, error) {
+				findByUserIDAndProdFunc: func(userID, productID int64) (*favorite.Favorite, error) {
 					if tc.existingFav != nil {
 						return tc.existingFav, nil
 					}
 					return nil, errors.New("not found")
 				},
-				createFunc: func(favorite *entity.Favorite) error {
+				createFunc: func(fav *favorite.Favorite) error {
 					return tc.repoErr
 				},
 			}
 			usecase := NewFavoriteUsecase(mockRepo)
 
-			err := usecase.AddFavorite(tc.favorite, tc.requestUserID)
+			err := usecase.AddFavorite(tc.fav, tc.requestUserID)
 
 			if tc.wantErr != "" {
 				if err == nil {

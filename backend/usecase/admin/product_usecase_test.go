@@ -1,8 +1,7 @@
 package adminusecase
 
 import (
-	"backend/domain/entity"
-	"backend/domain/valueobject"
+	"backend/domain/product"
 	"errors"
 	"strings"
 	"testing"
@@ -10,29 +9,29 @@ import (
 
 // mockProductRepository - テスト用モックリポジトリ
 type mockProductRepository struct {
-	createFn  func(product *entity.Product) error
-	updateFn  func(product *entity.Product) error
-	findByIDFn func(id int64) (*entity.Product, error)
+	createFn   func(p *product.Product) error
+	updateFn   func(p *product.Product) error
+	findByIDFn func(id int64) (*product.Product, error)
 }
 
-func (m *mockProductRepository) FindAll(categoryID int64, search string) ([]entity.Product, error) {
+func (m *mockProductRepository) FindAll(categoryID int64, search string) ([]product.Product, error) {
 	return nil, nil
 }
-func (m *mockProductRepository) FindByID(id int64) (*entity.Product, error) {
+func (m *mockProductRepository) FindByID(id int64) (*product.Product, error) {
 	if m.findByIDFn != nil {
 		return m.findByIDFn(id)
 	}
-	return &entity.Product{ID: id}, nil
+	return &product.Product{ID: id}, nil
 }
-func (m *mockProductRepository) Create(product *entity.Product) error {
+func (m *mockProductRepository) Create(p *product.Product) error {
 	if m.createFn != nil {
-		return m.createFn(product)
+		return m.createFn(p)
 	}
 	return nil
 }
-func (m *mockProductRepository) Update(product *entity.Product) error {
+func (m *mockProductRepository) Update(p *product.Product) error {
 	if m.updateFn != nil {
-		return m.updateFn(product)
+		return m.updateFn(p)
 	}
 	return nil
 }
@@ -45,17 +44,17 @@ func (m *mockProductRepository) UpdateRating(productID int64, rating float64, co
 
 // mockCategoryRepository - テスト用モックリポジトリ
 type mockCategoryRepository struct {
-	findByIDFn func(id int64) (*entity.Category, error)
+	findByIDFn func(id int64) (*product.Category, error)
 }
 
-func (m *mockCategoryRepository) FindAll() ([]entity.Category, error) {
+func (m *mockCategoryRepository) FindAll() ([]product.Category, error) {
 	return nil, nil
 }
-func (m *mockCategoryRepository) FindByID(id int64) (*entity.Category, error) {
+func (m *mockCategoryRepository) FindByID(id int64) (*product.Category, error) {
 	if m.findByIDFn != nil {
 		return m.findByIDFn(id)
 	}
-	return &entity.Category{ID: id, Name: "Test"}, nil
+	return &product.Category{ID: id, Name: "Test"}, nil
 }
 
 func validCreateInput() CreateProductInput {
@@ -72,12 +71,12 @@ func validCreateInput() CreateProductInput {
 func TestCreateProduct_Success(t *testing.T) {
 	uc := NewAdminProductUsecase(&mockProductRepository{}, &mockCategoryRepository{})
 
-	product, err := uc.CreateProduct(validCreateInput())
+	p, err := uc.CreateProduct(validCreateInput())
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if product.Name != "Test Product" {
-		t.Errorf("expected name 'Test Product', got '%s'", product.Name)
+	if p.Name != "Test Product" {
+		t.Errorf("expected name 'Test Product', got '%s'", p.Name)
 	}
 }
 
@@ -91,7 +90,7 @@ func TestCreateProduct_EmptyName(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty name")
 	}
-	if !errors.Is(err, valueobject.ErrProductNameEmpty) {
+	if !errors.Is(err, product.ErrProductNameEmpty) {
 		t.Errorf("expected ErrProductNameEmpty, got %v", err)
 	}
 }
@@ -106,7 +105,7 @@ func TestCreateProduct_NameTooLong(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for long name")
 	}
-	if !errors.Is(err, valueobject.ErrProductNameTooLong) {
+	if !errors.Is(err, product.ErrProductNameTooLong) {
 		t.Errorf("expected ErrProductNameTooLong, got %v", err)
 	}
 }
@@ -121,7 +120,7 @@ func TestCreateProduct_EmptyDescription(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty description")
 	}
-	if !errors.Is(err, valueobject.ErrProductDescriptionEmpty) {
+	if !errors.Is(err, product.ErrProductDescriptionEmpty) {
 		t.Errorf("expected ErrProductDescriptionEmpty, got %v", err)
 	}
 }
@@ -136,7 +135,7 @@ func TestCreateProduct_DescriptionTooLong(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for long description")
 	}
-	if !errors.Is(err, valueobject.ErrProductDescriptionTooLong) {
+	if !errors.Is(err, product.ErrProductDescriptionTooLong) {
 		t.Errorf("expected ErrProductDescriptionTooLong, got %v", err)
 	}
 }
@@ -151,7 +150,7 @@ func TestCreateProduct_EmptyImageURL(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for empty image URL")
 	}
-	if !errors.Is(err, valueobject.ErrURLEmpty) {
+	if !errors.Is(err, product.ErrURLEmpty) {
 		t.Errorf("expected ErrURLEmpty, got %v", err)
 	}
 }
@@ -166,7 +165,7 @@ func TestCreateProduct_InvalidImageURL(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid image URL")
 	}
-	if !errors.Is(err, valueobject.ErrURLInvalid) {
+	if !errors.Is(err, product.ErrURLInvalid) {
 		t.Errorf("expected ErrURLInvalid, got %v", err)
 	}
 }
@@ -182,7 +181,7 @@ func TestCreateProduct_InvalidOptionalURL(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid optional URL")
 	}
-	if !errors.Is(err, valueobject.ErrURLInvalid) {
+	if !errors.Is(err, product.ErrURLInvalid) {
 		t.Errorf("expected ErrURLInvalid, got %v", err)
 	}
 }
@@ -202,7 +201,7 @@ func TestCreateProduct_NilOptionalURL(t *testing.T) {
 
 func TestCreateProduct_CategoryNotFound(t *testing.T) {
 	catRepo := &mockCategoryRepository{
-		findByIDFn: func(id int64) (*entity.Category, error) {
+		findByIDFn: func(id int64) (*product.Category, error) {
 			return nil, errors.New("not found")
 		},
 	}
@@ -229,12 +228,12 @@ func TestUpdateProduct_Success(t *testing.T) {
 		CategoryIDs:   []int64{1},
 	}
 
-	product, err := uc.UpdateProduct(1, input)
+	p, err := uc.UpdateProduct(1, input)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if product.Name != "Updated" {
-		t.Errorf("expected name 'Updated', got '%s'", product.Name)
+	if p.Name != "Updated" {
+		t.Errorf("expected name 'Updated', got '%s'", p.Name)
 	}
 }
 
@@ -253,7 +252,7 @@ func TestUpdateProduct_ValidationError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected validation error")
 	}
-	if !errors.Is(err, valueobject.ErrProductNameEmpty) {
+	if !errors.Is(err, product.ErrProductNameEmpty) {
 		t.Errorf("expected ErrProductNameEmpty, got %v", err)
 	}
 }

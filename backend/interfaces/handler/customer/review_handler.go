@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"backend/domain/valueobject"
+	"backend/domain/review"
 	customerusecase "backend/usecase/customer"
 
 	"github.com/labstack/echo/v4"
@@ -67,7 +67,7 @@ func (h *ReviewHandler) CreateReview(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	review, err := h.reviewUsecase.CreateReview(productID, userID, req.Rating, req.Comment)
+	rev, err := h.reviewUsecase.CreateReview(productID, userID, req.Rating, req.Comment)
 	if err != nil {
 		// バリデーションエラー
 		if isValidationError(err) {
@@ -78,7 +78,7 @@ func (h *ReviewHandler) CreateReview(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusCreated, review)
+	return c.JSON(http.StatusCreated, rev)
 }
 
 // DeleteReview - レビュー削除
@@ -121,7 +121,7 @@ func (h *ReviewHandler) UpdateReview(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	review, err := h.reviewUsecase.UpdateReview(id, userID, req.Rating, req.Comment)
+	rev, err := h.reviewUsecase.UpdateReview(id, userID, req.Rating, req.Comment)
 	if err != nil {
 		// バリデーションエラー
 		if isValidationError(err) {
@@ -136,16 +136,16 @@ func (h *ReviewHandler) UpdateReview(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 	}
-	return c.JSON(http.StatusOK, review)
+	return c.JSON(http.StatusOK, rev)
 }
 
 // isValidationError - バリデーションエラーかどうかを判定
 func isValidationError(err error) bool {
 	switch err {
-	case valueobject.ErrInvalidRating,
-		valueobject.ErrCommentEmpty,
-		valueobject.ErrCommentTooShort,
-		valueobject.ErrCommentTooLong:
+	case review.ErrInvalidRating,
+		review.ErrCommentEmpty,
+		review.ErrCommentTooShort,
+		review.ErrCommentTooLong:
 		return true
 	}
 	return false

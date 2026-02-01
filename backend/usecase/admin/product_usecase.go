@@ -1,16 +1,14 @@
 package adminusecase
 
 import (
-	"backend/domain/entity"
-	"backend/domain/repository"
-	"backend/domain/valueobject"
+	"backend/domain/product"
 	"fmt"
 )
 
 // AdminProductUsecase - 管理者向け商品ユースケース
 type AdminProductUsecase struct {
-	productRepo  repository.ProductRepository
-	categoryRepo repository.CategoryRepository
+	productRepo  product.ProductRepository
+	categoryRepo product.CategoryRepository
 }
 
 // CreateProductInput - 商品作成の入力
@@ -44,7 +42,7 @@ type UpdateProductInput struct {
 }
 
 // NewAdminProductUsecase - 管理者向け商品ユースケースの生成
-func NewAdminProductUsecase(productRepo repository.ProductRepository, categoryRepo repository.CategoryRepository) *AdminProductUsecase {
+func NewAdminProductUsecase(productRepo product.ProductRepository, categoryRepo product.CategoryRepository) *AdminProductUsecase {
 	return &AdminProductUsecase{
 		productRepo:  productRepo,
 		categoryRepo: categoryRepo,
@@ -52,7 +50,7 @@ func NewAdminProductUsecase(productRepo repository.ProductRepository, categoryRe
 }
 
 // CreateProduct - 商品作成
-func (u *AdminProductUsecase) CreateProduct(input CreateProductInput) (*entity.Product, error) {
+func (u *AdminProductUsecase) CreateProduct(input CreateProductInput) (*product.Product, error) {
 	if err := u.validateProductFields(input.Name, input.NameJa, input.Description, input.DescriptionJa, input.ImageURL, input.AffiliateURL, input.AmazonURL, input.RakutenURL, input.YahooURL); err != nil {
 		return nil, err
 	}
@@ -62,7 +60,7 @@ func (u *AdminProductUsecase) CreateProduct(input CreateProductInput) (*entity.P
 		return nil, err
 	}
 
-	product := &entity.Product{
+	p := &product.Product{
 		Name:             input.Name,
 		NameJa:           input.NameJa,
 		Description:      input.Description,
@@ -76,15 +74,15 @@ func (u *AdminProductUsecase) CreateProduct(input CreateProductInput) (*entity.P
 		CreatedByAdminID: input.CreatedByAdminID,
 	}
 
-	if err := u.productRepo.Create(product); err != nil {
+	if err := u.productRepo.Create(p); err != nil {
 		return nil, err
 	}
-	return product, nil
+	return p, nil
 }
 
 // UpdateProduct - 商品更新
-func (u *AdminProductUsecase) UpdateProduct(id int64, input UpdateProductInput) (*entity.Product, error) {
-	product, err := u.productRepo.FindByID(id)
+func (u *AdminProductUsecase) UpdateProduct(id int64, input UpdateProductInput) (*product.Product, error) {
+	p, err := u.productRepo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -98,22 +96,22 @@ func (u *AdminProductUsecase) UpdateProduct(id int64, input UpdateProductInput) 
 		return nil, err
 	}
 
-	product.Name = input.Name
-	product.NameJa = input.NameJa
-	product.Description = input.Description
-	product.DescriptionJa = input.DescriptionJa
-	product.ImageURL = input.ImageURL
-	product.AffiliateURL = input.AffiliateURL
-	product.AmazonURL = input.AmazonURL
-	product.RakutenURL = input.RakutenURL
-	product.YahooURL = input.YahooURL
-	product.Categories = categories
-	product.UpdatedByAdminID = input.UpdatedByAdminID
+	p.Name = input.Name
+	p.NameJa = input.NameJa
+	p.Description = input.Description
+	p.DescriptionJa = input.DescriptionJa
+	p.ImageURL = input.ImageURL
+	p.AffiliateURL = input.AffiliateURL
+	p.AmazonURL = input.AmazonURL
+	p.RakutenURL = input.RakutenURL
+	p.YahooURL = input.YahooURL
+	p.Categories = categories
+	p.UpdatedByAdminID = input.UpdatedByAdminID
 
-	if err := u.productRepo.Update(product); err != nil {
+	if err := u.productRepo.Update(p); err != nil {
 		return nil, err
 	}
-	return product, nil
+	return p, nil
 }
 
 // DeleteProduct - 商品削除
@@ -122,45 +120,45 @@ func (u *AdminProductUsecase) DeleteProduct(id int64) error {
 }
 
 // GetProduct - 商品詳細取得
-func (u *AdminProductUsecase) GetProduct(id int64) (*entity.Product, error) {
+func (u *AdminProductUsecase) GetProduct(id int64) (*product.Product, error) {
 	return u.productRepo.FindByID(id)
 }
 
 // validateProductFields - 商品フィールドのバリデーション
 func (u *AdminProductUsecase) validateProductFields(name, nameJa, description, descriptionJa, imageURL string, affiliateURL, amazonURL, rakutenURL, yahooURL *string) error {
-	if _, err := valueobject.NewProductName(name); err != nil {
+	if _, err := product.NewProductName(name); err != nil {
 		return fmt.Errorf("name: %w", err)
 	}
-	if _, err := valueobject.NewProductName(nameJa); err != nil {
+	if _, err := product.NewProductName(nameJa); err != nil {
 		return fmt.Errorf("nameJa: %w", err)
 	}
-	if _, err := valueobject.NewProductDescription(description); err != nil {
+	if _, err := product.NewProductDescription(description); err != nil {
 		return fmt.Errorf("description: %w", err)
 	}
-	if _, err := valueobject.NewProductDescription(descriptionJa); err != nil {
+	if _, err := product.NewProductDescription(descriptionJa); err != nil {
 		return fmt.Errorf("descriptionJa: %w", err)
 	}
-	if _, err := valueobject.NewImageURL(imageURL); err != nil {
+	if _, err := product.NewImageURL(imageURL); err != nil {
 		return fmt.Errorf("imageUrl: %w", err)
 	}
-	if _, err := valueobject.NewOptionalURL(affiliateURL); err != nil {
+	if _, err := product.NewOptionalURL(affiliateURL); err != nil {
 		return fmt.Errorf("affiliateUrl: %w", err)
 	}
-	if _, err := valueobject.NewOptionalURL(amazonURL); err != nil {
+	if _, err := product.NewOptionalURL(amazonURL); err != nil {
 		return fmt.Errorf("amazonUrl: %w", err)
 	}
-	if _, err := valueobject.NewOptionalURL(rakutenURL); err != nil {
+	if _, err := product.NewOptionalURL(rakutenURL); err != nil {
 		return fmt.Errorf("rakutenUrl: %w", err)
 	}
-	if _, err := valueobject.NewOptionalURL(yahooURL); err != nil {
+	if _, err := product.NewOptionalURL(yahooURL); err != nil {
 		return fmt.Errorf("yahooUrl: %w", err)
 	}
 	return nil
 }
 
 // resolveCategories - カテゴリIDの存在チェックとエンティティ取得
-func (u *AdminProductUsecase) resolveCategories(categoryIDs []int64) ([]entity.Category, error) {
-	var categories []entity.Category
+func (u *AdminProductUsecase) resolveCategories(categoryIDs []int64) ([]product.Category, error) {
+	var categories []product.Category
 	for _, id := range categoryIDs {
 		cat, err := u.categoryRepo.FindByID(id)
 		if err != nil {

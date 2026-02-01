@@ -1,4 +1,4 @@
-package valueobject
+package review
 
 import (
 	"encoding/json"
