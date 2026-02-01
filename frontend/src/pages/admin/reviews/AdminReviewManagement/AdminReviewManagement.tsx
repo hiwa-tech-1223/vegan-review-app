@@ -1,32 +1,48 @@
-import { useState } from 'react';
-import { Search, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Trash2, Loader2 } from 'lucide-react';
 import { Admin } from '../../../../api/auth/authTypes';
-import { Review } from '../../../../api/customer/reviewTypes';
-import { mockProducts, mockReviews } from '../../../../data/mockData';
+import { ApiReview } from '../../../../api/customer/reviewTypes';
+import { adminReviewApi } from '../../../../api/admin/reviewApi';
 import { AdminHeader } from '../../common/AdminHeader/AdminHeader';
 import { StarRating } from '../../../../components/StarRating';
+import { useAuth } from '../../../auth';
 
 interface AdminReviewManagementProps {
   admin: Admin;
-  reviews: Review[];
-  setReviews: (reviews: Review[]) => void;
 }
 
-export function AdminReviewManagement({ admin, reviews, setReviews }: AdminReviewManagementProps) {
+export function AdminReviewManagement({ admin }: AdminReviewManagementProps) {
+  const { token } = useAuth();
+  const [reviews, setReviews] = useState<ApiReview[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRating, setSelectedRating] = useState('All');
   const [selectedReviews, setSelectedReviews] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const itemsPerPage = 10;
 
-  const allReviews = [...mockReviews, ...reviews];
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const data = await adminReviewApi.getAllReviews(token!);
+        setReviews(data);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchReviews();
+  }, [token]);
 
-  const filteredReviews = allReviews.filter(review => {
-    const product = mockProducts.find(p => p.id === review.productId);
+  const filteredReviews = reviews.filter(review => {
+    const customerName = review.customer?.name ?? '';
+    const productName = review.product?.name ?? '';
     const matchesSearch =
-      review.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.comment.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (product && product.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      productName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRating = selectedRating === 'All' || review.rating === parseInt(selectedRating);
     return matchesSearch && matchesRating;
   });
@@ -34,6 +50,22 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
   const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const displayedReviews = filteredReviews.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleDeleteReview = async (reviewId: number) => {
+    if (confirm('このレビューを削除しますか？\n\nAre you sure you want to delete this review?')) {
+      setIsDeleting(true);
+      try {
+        await adminReviewApi.deleteReview(reviewId, token!);
+        setReviews(reviews.filter(r => r.id !== reviewId));
+        setSelectedReviews(selectedReviews.filter(id => id !== reviewId));
+      } catch (error) {
+        console.error('Failed to delete review:', error);
+        alert('レビューの削除に失敗しました / Failed to delete review');
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -51,19 +83,35 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
     }
   };
 
-  const handleDeleteReview = (reviewId: number) => {
-    if (confirm('このレビューを削除しますか？\n\nAre you sure you want to delete this review?')) {
-      setReviews(reviews.filter(r => r.id !== reviewId));
+  const handleBulkDelete = async () => {
+    if (selectedReviews.length === 0) return;
+    if (confirm(`${selectedReviews.length}件のレビューを削除しますか？\n\nAre you sure you want to delete ${selectedReviews.length} review(s)?`)) {
+      setIsDeleting(true);
+      try {
+        await Promise.all(
+          selectedReviews.map(id => adminReviewApi.deleteReview(id, token!))
+        );
+        setReviews(reviews.filter(r => !selectedReviews.includes(r.id)));
+        setSelectedReviews([]);
+      } catch (error) {
+        console.error('Failed to delete reviews:', error);
+        alert('レビューの削除に失敗しました / Failed to delete reviews');
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
-  const handleBulkDelete = () => {
-    if (selectedReviews.length === 0) return;
-    if (confirm(`${selectedReviews.length}件のレビューを削除しますか？\n\nAre you sure you want to delete ${selectedReviews.length} review(s)?`)) {
-      setReviews(reviews.filter(r => !selectedReviews.includes(r.id)));
-      setSelectedReviews([]);
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <AdminHeader admin={admin} />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--primary)' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -78,7 +126,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
               className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
               style={{ backgroundColor: '#dc2626', color: 'white' }}
             >
-              <Trash2 className="w-4 h-4" />
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               Delete Selected ({selectedReviews.length})
             </button>
           )}
@@ -152,65 +200,66 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {displayedReviews.map(review => {
-                const product = mockProducts.find(p => p.id === review.productId);
-                return (
-                  <tr key={review.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedReviews.includes(review.id)}
-                        onChange={(e) => handleSelectReview(review.id, e.target.checked)}
-                        className="w-4 h-4 text-[#4A7C59] rounded focus:ring-[#4A7C59]"
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      {product && (
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                          <div>
-                            <p className="text-sm text-gray-900">{product.name}</p>
-                            <p className="text-xs text-gray-500">{product.nameJa}</p>
-                          </div>
+              {displayedReviews.map(review => (
+                <tr key={review.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedReviews.includes(review.id)}
+                      onChange={(e) => handleSelectReview(review.id, e.target.checked)}
+                      className="w-4 h-4 text-[#4A7C59] rounded focus:ring-[#4A7C59]"
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    {review.product && (
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={review.product.imageUrl}
+                          alt={review.product.name}
+                          className="w-12 h-12 rounded object-cover"
+                        />
+                        <div>
+                          <p className="text-sm text-gray-900">{review.product.name}</p>
+                          <p className="text-xs text-gray-500">{review.product.nameJa}</p>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    {review.customer && (
                       <div className="flex items-center gap-2">
                         <img
-                          src={review.customerAvatar}
-                          alt={review.customerName}
+                          src={review.customer.avatar}
+                          alt={review.customer.name}
                           className="w-8 h-8 rounded-full object-cover"
                         />
-                        <span className="text-sm text-gray-900">{review.customerName}</span>
+                        <span className="text-sm text-gray-900">{review.customer.name}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <StarRating rating={review.rating} size="sm" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-900 max-w-xs truncate">
-                        {review.comment}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-500">{review.date}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleDeleteReview(review.id)}
-                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <StarRating rating={review.rating} size="sm" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm text-gray-900 max-w-xs truncate">
+                      {review.comment}
+                    </p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-500">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleDeleteReview(review.id)}
+                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 

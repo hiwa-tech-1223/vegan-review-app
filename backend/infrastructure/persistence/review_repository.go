@@ -70,6 +70,23 @@ func NewReviewRepository(db *gorm.DB) review.ReviewRepository {
 	return &reviewRepository{db: db}
 }
 
+func (r *reviewRepository) FindAll() ([]review.Review, error) {
+	var models []reviewModel
+	if err := r.db.Preload("Customer").Preload("Product").Order("created_at DESC").Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	reviews := make([]review.Review, 0, len(models))
+	for _, m := range models {
+		e, err := m.toEntity()
+		if err != nil {
+			return nil, err
+		}
+		reviews = append(reviews, *e)
+	}
+	return reviews, nil
+}
+
 func (r *reviewRepository) FindByProductID(productID int64) ([]review.Review, error) {
 	var models []reviewModel
 	if err := r.db.Preload("Customer").Where("product_id = ?", productID).Order("created_at DESC").Find(&models).Error; err != nil {

@@ -19,6 +19,10 @@ type mockReviewRepository struct {
 	getRatingStatsFunc             func(productID int64) (float64, int64, error)
 }
 
+func (m *mockReviewRepository) FindAll() ([]review.Review, error) {
+	return m.reviews, nil
+}
+
 func (m *mockReviewRepository) FindByProductID(productID int64) ([]review.Review, error) {
 	var result []review.Review
 	for _, r := range m.reviews {

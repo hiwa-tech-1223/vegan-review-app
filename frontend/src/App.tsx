@@ -1,9 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router';
-import { useState } from 'react';
-
 // Feature imports
 import { AuthProvider, useAuth } from './pages/auth';
-import { Review } from './api/customer/reviewTypes';
 import { ProductList, ProductDetail } from './pages/customer/products';
 import { CustomerLogin, AuthCallback } from './pages/auth';
 import { MyPage } from './pages/customer/users';
@@ -62,7 +59,6 @@ function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { customer, admin } = useAuth();
-  const [reviews, setReviews] = useState<Review[]>([]);
 
   return (
     <Routes>
@@ -117,11 +113,7 @@ function AppRoutes() {
         path="/admin/reviews"
         element={
           <ProtectedAdminRoute>
-            <AdminReviewManagement
-              admin={admin!}
-              reviews={reviews}
-              setReviews={setReviews}
-            />
+            <AdminReviewManagement admin={admin!} />
           </ProtectedAdminRoute>
         }
       />
