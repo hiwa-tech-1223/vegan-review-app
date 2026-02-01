@@ -11,4 +11,4 @@ export { AdminProductForm } from './products/components/AdminProductForm';
 export { AdminCategoryManagement } from './categories/components/AdminCategoryManagement';
 export { AdminCategoryForm } from './categories/components/AdminCategoryForm';
 export { AdminReviewManagement } from './reviews/components/AdminReviewManagement';
-export { AdminUserManagement } from './users/components/AdminUserManagement';
+export { AdminCustomerManagement } from './users/components/AdminUserManagement';

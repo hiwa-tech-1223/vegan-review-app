@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Initialize repositories
-	userRepo := persistence.NewUserRepository(db)
+	customerRepo := persistence.NewCustomerRepository(db)
 	adminRepo := persistence.NewAdminRepository(db)
 	productRepo := persistence.NewProductRepository(db)
 	categoryRepo := persistence.NewCategoryRepository(db)
@@ -48,7 +48,7 @@ func main() {
 	)
 
 	// Initialize use cases
-	authUsecase := usecase.NewAuthUsecase(userRepo, adminRepo)
+	authUsecase := usecase.NewAuthUsecase(customerRepo, adminRepo)
 	favoriteUsecase := usecase.NewFavoriteUsecase(favoriteRepo)
 	adminProductUsecase := adminusecase.NewAdminProductUsecase(productRepo, categoryRepo)
 	customerProductUsecase := customerusecase.NewProductUsecase(productRepo, categoryRepo)
@@ -98,7 +98,7 @@ func main() {
 	authGroup.Use(handler.JWTMiddleware(jwtService))
 
 	// Auth info
-	authGroup.GET("/auth/me", authHandler.GetCurrentUser)
+	authGroup.GET("/auth/me", authHandler.GetMe)
 	authGroup.POST("/auth/logout", authHandler.HandleLogout)
 
 	// Product routes (protected write - admin)
@@ -112,12 +112,12 @@ func main() {
 	authGroup.DELETE("/reviews/:id", customerReviewHandler.DeleteReview)
 
 	// Favorite routes (all protected)
-	authGroup.GET("/users/:id/favorites", customerFavoriteHandler.GetUserFavorites)
-	authGroup.POST("/users/:id/favorites", customerFavoriteHandler.AddFavorite)
-	authGroup.DELETE("/users/:id/favorites/:productId", customerFavoriteHandler.RemoveFavorite)
+	authGroup.GET("/customers/:id/favorites", customerFavoriteHandler.GetCustomerFavorites)
+	authGroup.POST("/customers/:id/favorites", customerFavoriteHandler.AddFavorite)
+	authGroup.DELETE("/customers/:id/favorites/:productId", customerFavoriteHandler.RemoveFavorite)
 
-	// User routes (protected)
-	authGroup.GET("/users/:id/reviews", customerReviewHandler.GetUserReviews)
+	// Customer routes (protected)
+	authGroup.GET("/customers/:id/reviews", customerReviewHandler.GetCustomerReviews)
 
 	// Start server
 	log.Println("Server starting on :8080")

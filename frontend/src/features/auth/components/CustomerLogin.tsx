@@ -4,13 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api';
 import { Navigate } from 'react-router';
 
-export function UserLogin() {
-  const { user } = useAuth();
+export function CustomerLogin() {
+  const { customer } = useAuth();
   const [searchParams] = useSearchParams();
   const error = searchParams.get('error');
 
   // Already logged in
-  if (user) {
+  if (customer) {
     return <Navigate to="/" />;
   }
 

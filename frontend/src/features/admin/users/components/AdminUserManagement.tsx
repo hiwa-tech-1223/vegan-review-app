@@ -4,21 +4,21 @@ import { Search, Ban, CheckCircle, Loader2, Clock } from 'lucide-react';
 import { Admin } from '../../../auth/types';
 import { AdminHeader } from '../../common/components/AdminHeader';
 import { adminApi } from '../api';
-import { ManagedUser } from '../types';
+import { ManagedCustomer } from '../types';
 import { useAuth } from '../../../auth';
 
-interface AdminUserManagementProps {
+interface AdminCustomerManagementProps {
   admin: Admin;
 }
 
-export function AdminUserManagement({ admin }: AdminUserManagementProps) {
+export function AdminCustomerManagement({ admin }: AdminCustomerManagementProps) {
   const { token: adminToken } = useAuth();
-  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [customers, setCustomers] = useState<ManagedCustomer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'banned' | 'suspended'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<ManagedCustomer | null>(null);
   const [showBanModal, setShowBanModal] = useState(false);
   const [banReason, setBanReason] = useState('');
   const [showSuspendModal, setShowSuspendModal] = useState(false);
@@ -26,85 +26,85 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
   const [suspendReason, setSuspendReason] = useState('');
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchCustomers = async () => {
       try {
-        const data = await adminApi.getUsers(adminToken || '');
-        setUsers(data);
+        const data = await adminApi.getCustomers(adminToken || '');
+        setCustomers(data);
       } catch (err) {
-        setError('Failed to fetch users');
+        setError('Failed to fetch customers');
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchUsers();
+    fetchCustomers();
   }, [adminToken]);
 
-  const filteredUsers = users.filter(user => {
+  const filteredCustomers = customers.filter(customer => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || customer.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleBanUser = (user: ManagedUser) => {
-    setSelectedUser(user);
+  const handleBanCustomer = (customer: ManagedCustomer) => {
+    setSelectedCustomer(customer);
     setBanReason('');
     setShowBanModal(true);
   };
 
   const confirmBan = async () => {
-    if (!selectedUser || !adminToken) return;
+    if (!selectedCustomer || !adminToken) return;
     try {
-      const updatedUser = await adminApi.banUser(selectedUser.id, banReason, adminToken);
-      setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u));
+      const updatedCustomer = await adminApi.banCustomer(selectedCustomer.id, banReason, adminToken);
+      setCustomers(customers.map(c => c.id === selectedCustomer.id ? updatedCustomer : c));
       setShowBanModal(false);
-      setSelectedUser(null);
+      setSelectedCustomer(null);
       setBanReason('');
     } catch (err) {
-      console.error('Failed to ban user:', err);
+      console.error('Failed to ban customer:', err);
     }
   };
 
-  const handleUnbanUser = async (userId: number) => {
+  const handleUnbanCustomer = async (customerId: number) => {
     if (!adminToken) return;
-    if (confirm('このユーザーのBAN/停止を解除しますか？\n\nAre you sure you want to unban/unsuspend this user?')) {
+    if (confirm('このカスタマーのBAN/停止を解除しますか？\n\nAre you sure you want to unban/unsuspend this customer?')) {
       try {
-        const updatedUser = await adminApi.unbanUser(userId, adminToken);
-        setUsers(users.map(u => u.id === userId ? updatedUser : u));
+        const updatedCustomer = await adminApi.unbanCustomer(customerId, adminToken);
+        setCustomers(customers.map(c => c.id === customerId ? updatedCustomer : c));
       } catch (err) {
-        console.error('Failed to unban user:', err);
+        console.error('Failed to unban customer:', err);
       }
     }
   };
 
-  const handleSuspendUser = (user: ManagedUser) => {
-    setSelectedUser(user);
+  const handleSuspendCustomer = (customer: ManagedCustomer) => {
+    setSelectedCustomer(customer);
     setSuspendDuration(7);
     setSuspendReason('');
     setShowSuspendModal(true);
   };
 
   const confirmSuspend = async () => {
-    if (!selectedUser || !adminToken) return;
+    if (!selectedCustomer || !adminToken) return;
     try {
-      // TODO: API連携時に実装（suspendUser APIを追加）
-      const updatedUser: ManagedUser = {
-        ...selectedUser,
+      // TODO: API連携時に実装（suspendCustomer APIを追加）
+      const updatedCustomer: ManagedCustomer = {
+        ...selectedCustomer,
         status: 'suspended',
         statusReason: `${suspendDuration}日間停止: ${suspendReason}`
       };
-      setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u));
+      setCustomers(customers.map(c => c.id === selectedCustomer.id ? updatedCustomer : c));
       setShowSuspendModal(false);
-      setSelectedUser(null);
+      setSelectedCustomer(null);
       setSuspendReason('');
     } catch (err) {
-      console.error('Failed to suspend user:', err);
+      console.error('Failed to suspend customer:', err);
     }
   };
 
-  const getStatusBadge = (status: ManagedUser['status']) => {
+  const getStatusBadge = (status: ManagedCustomer['status']) => {
     switch (status) {
       case 'active':
         return <span className="inline-block px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Active</span>;
@@ -143,9 +143,9 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl text-gray-900">User Management</h1>
+          <h1 className="text-2xl text-gray-900">Customer Management</h1>
           <div className="text-sm text-gray-500">
-            Total: {users.length} users
+            Total: {customers.length} customers
           </div>
         </div>
 
@@ -175,13 +175,13 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
           </div>
         </div>
 
-        {/* Users Table */}
+        {/* Customers Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  User
+                  Customer
                 </th>
                 <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
                   Email
@@ -201,66 +201,66 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredUsers.length === 0 ? (
+              {filteredCustomers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No users found
+                    No customers found
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map(user => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                filteredCustomers.map(customer => (
+                  <tr key={customer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img
-                          src={user.avatar}
-                          alt={user.name}
+                          src={customer.avatar}
+                          alt={customer.name}
                           className="w-10 h-10 rounded-full object-cover"
                         />
-                        <span className="text-sm text-gray-900">{user.name}</span>
+                        <span className="text-sm text-gray-900">{customer.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">{user.email}</span>
+                      <span className="text-sm text-gray-600">{customer.email}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-600">
-                        {user.memberSince ? new Date(user.memberSince).toLocaleDateString('ja-JP') : '-'}
+                        {customer.memberSince ? new Date(customer.memberSince).toLocaleDateString('ja-JP') : '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-900">{user.reviewCount}</span>
+                      <span className="text-sm text-gray-900">{customer.reviewCount}</span>
                     </td>
                     <td className="px-6 py-4">
-                      {getStatusBadge(user.status)}
-                      {user.statusReason && (
-                        <p className="text-xs text-gray-500 mt-1">{user.statusReason}</p>
+                      {getStatusBadge(customer.status)}
+                      {customer.statusReason && (
+                        <p className="text-xs text-gray-500 mt-1">{customer.statusReason}</p>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {user.status === 'active' ? (
+                        {customer.status === 'active' ? (
                           <>
                             <button
-                              onClick={() => handleSuspendUser(user)}
+                              onClick={() => handleSuspendCustomer(customer)}
                               className="p-2 text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 rounded transition-all"
-                              title="一時停止 / Suspend User"
+                              title="一時停止 / Suspend Customer"
                             >
                               <Clock className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleBanUser(user)}
+                              onClick={() => handleBanCustomer(customer)}
                               className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-all"
-                              title="BAN / Ban User"
+                              title="BAN / Ban Customer"
                             >
                               <Ban className="w-4 h-4" />
                             </button>
                           </>
                         ) : (
                           <button
-                            onClick={() => handleUnbanUser(user.id)}
+                            onClick={() => handleUnbanCustomer(customer.id)}
                             className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-all"
-                            title="解除 / Unban User"
+                            title="解除 / Unban Customer"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </button>
@@ -276,7 +276,7 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
       </main>
 
       {/* Ban Modal */}
-      {showBanModal && selectedUser && createPortal(
+      {showBanModal && selectedCustomer && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -292,9 +292,9 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
           }}
         >
           <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4" style={{ margin: '16px' }}>
-            <h2 className="text-xl text-gray-900 mb-4">BAN / Ban User</h2>
+            <h2 className="text-xl text-gray-900 mb-4">BAN / Ban Customer</h2>
             <p className="text-gray-600 mb-4">
-              <strong>{selectedUser.name}</strong> をBANしますか？
+              <strong>{selectedCustomer.name}</strong> をBANしますか？
             </p>
             <div className="mb-4">
               <label className="block text-sm text-gray-700 mb-2">
@@ -329,7 +329,7 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
       )}
 
       {/* Suspend Modal */}
-      {showSuspendModal && selectedUser && createPortal(
+      {showSuspendModal && selectedCustomer && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -345,9 +345,9 @@ export function AdminUserManagement({ admin }: AdminUserManagementProps) {
           }}
         >
           <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4" style={{ margin: '16px' }}>
-            <h2 className="text-xl text-gray-900 mb-4">一時停止 / Suspend User</h2>
+            <h2 className="text-xl text-gray-900 mb-4">一時停止 / Suspend Customer</h2>
             <p className="text-gray-600 mb-4">
-              <strong>{selectedUser.name}</strong> を一時停止しますか？
+              <strong>{selectedCustomer.name}</strong> を一時停止しますか？
             </p>
             <div className="mb-4">
               <label className="block text-sm text-gray-700 mb-2">

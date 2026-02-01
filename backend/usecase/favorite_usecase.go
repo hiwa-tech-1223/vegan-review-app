@@ -15,22 +15,22 @@ func NewFavoriteUsecase(favoriteRepo favorite.FavoriteRepository) *FavoriteUseca
 	return &FavoriteUsecase{favoriteRepo: favoriteRepo}
 }
 
-// GetUserFavorites - ユーザーのお気に入り一覧取得
-func (u *FavoriteUsecase) GetUserFavorites(userID, requestUserID int64) ([]favorite.Favorite, error) {
-	if userID != requestUserID {
+// GetCustomerFavorites - カスタマーのお気に入り一覧取得
+func (u *FavoriteUsecase) GetCustomerFavorites(customerID, requestCustomerID int64) ([]favorite.Favorite, error) {
+	if customerID != requestCustomerID {
 		return nil, errors.New("permission denied")
 	}
-	return u.favoriteRepo.FindByUserID(userID)
+	return u.favoriteRepo.FindByCustomerID(customerID)
 }
 
 // AddFavorite - お気に入り追加
-func (u *FavoriteUsecase) AddFavorite(fav *favorite.Favorite, requestUserID int64) error {
-	if fav.UserID != requestUserID {
+func (u *FavoriteUsecase) AddFavorite(fav *favorite.Favorite, requestCustomerID int64) error {
+	if fav.CustomerID != requestCustomerID {
 		return errors.New("permission denied")
 	}
 
 	// 既に登録済みかチェック
-	existing, _ := u.favoriteRepo.FindByUserIDAndProductID(fav.UserID, fav.ProductID)
+	existing, _ := u.favoriteRepo.FindByCustomerIDAndProductID(fav.CustomerID, fav.ProductID)
 	if existing != nil {
 		return errors.New("already in favorites")
 	}
@@ -39,9 +39,9 @@ func (u *FavoriteUsecase) AddFavorite(fav *favorite.Favorite, requestUserID int6
 }
 
 // RemoveFavorite - お気に入り削除
-func (u *FavoriteUsecase) RemoveFavorite(userID, productID, requestUserID int64) error {
-	if userID != requestUserID {
+func (u *FavoriteUsecase) RemoveFavorite(customerID, productID, requestCustomerID int64) error {
+	if customerID != requestCustomerID {
 		return errors.New("permission denied")
 	}
-	return u.favoriteRepo.Delete(userID, productID)
+	return u.favoriteRepo.Delete(customerID, productID)
 }

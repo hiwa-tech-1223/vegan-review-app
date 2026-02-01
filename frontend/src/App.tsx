@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { AuthProvider, useAuth } from './features/auth';
 import { Review } from './features/customer/reviews/types';
 import { ProductListing, ProductDetail } from './features/customer/products';
-import { UserLogin, AuthCallback } from './features/auth';
+import { CustomerLogin, AuthCallback } from './features/auth';
 import { MyPage } from './features/customer/users';
 import {
   AdminLogin,
@@ -15,16 +15,16 @@ import {
   AdminCategoryManagement,
   AdminCategoryForm,
   AdminReviewManagement,
-  AdminUserManagement,
+  AdminCustomerManagement,
 } from './features/admin';
 
 // Common components
 import { Terms } from './components/Terms';
 import { Privacy } from './components/Privacy';
 
-// Protected Route for Users
-function ProtectedUserRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+// Protected Route for Customers
+function ProtectedCustomerRoute({ children }: { children: React.ReactNode }) {
+  const { customer, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -34,7 +34,7 @@ function ProtectedUserRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!customer) {
     return <Navigate to="/login" />;
   }
 
@@ -61,26 +61,26 @@ function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { user, admin } = useAuth();
+  const { customer, admin } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
 
   return (
     <Routes>
-      {/* Public User Routes */}
-      <Route path="/" element={<ProductListing user={user} />} />
+      {/* Public Customer Routes */}
+      <Route path="/" element={<ProductListing customer={customer} />} />
       <Route path="/product/:id" element={<ProductDetail />} />
-      <Route path="/login" element={<UserLogin />} />
+      <Route path="/login" element={<CustomerLogin />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
 
-      {/* Protected User Routes */}
+      {/* Protected Customer Routes */}
       <Route
         path="/mypage"
         element={
-          <ProtectedUserRoute>
+          <ProtectedCustomerRoute>
             <MyPage />
-          </ProtectedUserRoute>
+          </ProtectedCustomerRoute>
         }
       />
 
@@ -150,10 +150,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/admin/users"
+        path="/admin/customers"
         element={
           <ProtectedAdminRoute>
-            <AdminUserManagement admin={admin!} />
+            <AdminCustomerManagement admin={admin!} />
           </ProtectedAdminRoute>
         }
       />

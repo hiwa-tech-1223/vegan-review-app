@@ -24,7 +24,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
   const filteredReviews = allReviews.filter(review => {
     const product = mockProducts.find(p => p.id === review.productId);
     const matchesSearch =
-      review.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      review.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.comment.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (product && product.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesRating = selectedRating === 'All' || review.rating === parseInt(selectedRating);
@@ -91,7 +91,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by product, user, or comment..."
+                placeholder="Search by product, customer, or comment..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
                 value={searchQuery}
                 onChange={(e) => {
@@ -135,7 +135,7 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
                   Product
                 </th>
                 <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                  User
+                  Customer
                 </th>
                 <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
                   Rating
@@ -182,11 +182,11 @@ export function AdminReviewManagement({ admin, reviews, setReviews }: AdminRevie
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <img
-                          src={review.userAvatar}
-                          alt={review.userName}
+                          src={review.customerAvatar}
+                          alt={review.customerName}
                           className="w-8 h-8 rounded-full object-cover"
                         />
-                        <span className="text-sm text-gray-900">{review.userName}</span>
+                        <span className="text-sm text-gray-900">{review.customerName}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">

@@ -116,9 +116,9 @@ export const mockReviews: Review[] = [
   {
     id: 1,
     productId: 1,
-    userId: 1,
-    userName: 'Yuki Tanaka',
-    userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+    customerId: 1,
+    customerName: 'Yuki Tanaka',
+    customerAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
     rating: 5,
     comment: 'Amazing taste! Very close to real beef. 本物の牛肉に近い味わいで驚きました。',
     date: '2025-12-15'
@@ -126,9 +126,9 @@ export const mockReviews: Review[] = [
   {
     id: 2,
     productId: 1,
-    userId: 2,
-    userName: 'Mike Johnson',
-    userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+    customerId: 2,
+    customerName: 'Mike Johnson',
+    customerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
     rating: 4,
     comment: 'Great texture, though a bit pricey. Perfect for BBQ parties.',
     date: '2025-12-10'
@@ -136,9 +136,9 @@ export const mockReviews: Review[] = [
   {
     id: 3,
     productId: 2,
-    userId: 3,
-    userName: 'Sakura Yamamoto',
-    userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+    customerId: 3,
+    customerName: 'Sakura Yamamoto',
+    customerAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
     rating: 5,
     comment: 'コーヒーに入れるのに最適です！クリーミーで美味しい。Perfect for my morning coffee!',
     date: '2025-12-20'

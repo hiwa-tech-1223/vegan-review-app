@@ -116,7 +116,7 @@ describe('ProductListing', () => {
         () => new Promise((resolve) => { resolveProducts = resolve; })
       );
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       // ローディングスピナーが表示される（animate-spinクラスで確認）
       const spinner = document.querySelector('.animate-spin');
@@ -135,7 +135,7 @@ describe('ProductListing', () => {
     });
 
     it('初期ロード後に商品一覧を表示する', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       // 商品が表示されるまで待つ
       await waitFor(() => {
@@ -148,7 +148,7 @@ describe('ProductListing', () => {
     });
 
     it('カテゴリータブを表示する', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe('ProductListing', () => {
     });
 
     it('初回ロード時にカテゴリーと商品を並列で取得する', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -182,7 +182,7 @@ describe('ProductListing', () => {
     it('API失敗時にエラーメッセージを表示する', async () => {
       vi.mocked(productApi.getProducts).mockRejectedValue(new Error('Network error'));
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText(/データの取得に失敗しました/)).toBeInTheDocument();
@@ -197,7 +197,7 @@ describe('ProductListing', () => {
     it('商品が0件の場合はメッセージを表示する', async () => {
       vi.mocked(productApi.getProducts).mockResolvedValue([]);
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText(/No products found \/ 商品が見つかりません/)).toBeInTheDocument();
@@ -208,7 +208,7 @@ describe('ProductListing', () => {
   describe('カテゴリーフィルタリング', () => {
     it('カテゴリータブをクリックするとそのカテゴリーで商品を取得する', async () => {
       const user = userEvent.setup();
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe('ProductListing', () => {
 
     it('「All」タブをクリックすると全商品を取得する', async () => {
       const user = userEvent.setup();
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -259,7 +259,7 @@ describe('ProductListing', () => {
     it('検索ボックスに入力すると検索クエリで商品を取得する', async () => {
       const user = userEvent.setup();
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       // 初期ロード完了を待つ
       await waitFor(() => {
@@ -288,7 +288,7 @@ describe('ProductListing', () => {
     it('検索をクリアすると全商品を再取得する', async () => {
       const user = userEvent.setup();
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -323,7 +323,7 @@ describe('ProductListing', () => {
     it('6件を超える場合はページネーションを表示する', async () => {
       vi.mocked(productApi.getProducts).mockResolvedValue(mockManyProducts);
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Product 1')).toBeInTheDocument();
@@ -343,7 +343,7 @@ describe('ProductListing', () => {
       vi.mocked(productApi.getProducts).mockResolvedValue(mockManyProducts);
       const user = userEvent.setup();
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Product 1')).toBeInTheDocument();
@@ -360,7 +360,7 @@ describe('ProductListing', () => {
     });
 
     it('6件以下の場合はページネーションを表示しない', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -374,7 +374,7 @@ describe('ProductListing', () => {
 
   describe('商品カード表示', () => {
     it('複数カテゴリーを持つ商品は全てのカテゴリータグを表示する', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -401,7 +401,7 @@ describe('ProductListing', () => {
       };
       vi.mocked(productApi.getProducts).mockResolvedValue([productWithoutCategory]);
 
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('No Category Product')).toBeInTheDocument();
@@ -411,7 +411,7 @@ describe('ProductListing', () => {
     });
 
     it('商品カードは商品詳細ページへのリンクになっている', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -422,7 +422,7 @@ describe('ProductListing', () => {
     });
 
     it('商品の評価を星で表示する', async () => {
-      render(<ProductListing user={mockUser} />);
+      render(<ProductListing customer={mockUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -436,7 +436,7 @@ describe('ProductListing', () => {
 
   describe('ナビゲーション', () => {
     it('未ログイン時は「Login」リンクを表示する', async () => {
-      render(<ProductListing user={null} />);
+      render(<ProductListing customer={null} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();
@@ -455,7 +455,7 @@ describe('ProductListing', () => {
         avatar: 'https://example.com/avatar.jpg',
       };
 
-      render(<ProductListing user={loggedInUser} />);
+      render(<ProductListing customer={loggedInUser} />);
 
       await waitFor(() => {
         expect(screen.getByText('Beyond Burger')).toBeInTheDocument();

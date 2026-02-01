@@ -3,14 +3,14 @@ import { Link } from 'react-router';
 import { Search, Leaf, User, Loader2 } from 'lucide-react';
 import { productApi } from '../api';
 import { ApiProduct, ApiCategory } from '../types';
-import { User as UserType } from '../../../auth/types';
+import { Customer } from '../../../auth/types';
 import { StarRating } from '../../../../components/StarRating';
 
 interface ProductListingProps {
-  user: UserType | null;
+  customer: Customer | null;
 }
 
-export function ProductListing({ user }: ProductListingProps) {
+export function ProductListing({ customer }: ProductListingProps) {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<'all' | number>('all');
@@ -103,7 +103,7 @@ export function ProductListing({ user }: ProductListingProps) {
                   <span className="hidden sm:inline">Home / ホーム</span>
                   <span className="sm:hidden">Home</span>
                 </Link>
-                {user ? (
+                {customer ? (
                   <Link
                     to="/mypage"
                     className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base whitespace-nowrap"

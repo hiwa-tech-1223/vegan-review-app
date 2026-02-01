@@ -2,43 +2,9 @@ package persistence
 
 import (
 	"backend/domain/admin"
-	"backend/domain/user"
 
 	"gorm.io/gorm"
 )
-
-type userRepository struct {
-	db *gorm.DB
-}
-
-// NewUserRepository - ユーザーリポジトリの生成
-func NewUserRepository(db *gorm.DB) user.UserRepository {
-	return &userRepository{db: db}
-}
-
-func (r *userRepository) FindByID(id int64) (*user.User, error) {
-	var u user.User
-	if err := r.db.First(&u, "id = ?", id).Error; err != nil {
-		return nil, err
-	}
-	return &u, nil
-}
-
-func (r *userRepository) FindByGoogleID(googleID string) (*user.User, error) {
-	var u user.User
-	if err := r.db.Where("google_id = ?", googleID).First(&u).Error; err != nil {
-		return nil, err
-	}
-	return &u, nil
-}
-
-func (r *userRepository) Create(u *user.User) error {
-	return r.db.Create(u).Error
-}
-
-func (r *userRepository) Update(u *user.User) error {
-	return r.db.Save(u).Error
-}
 
 // adminRepository
 type adminRepository struct {

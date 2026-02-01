@@ -5,9 +5,9 @@ import { ApiProduct } from '../products/types';
 export interface Review {
   id: number;
   productId: number;
-  userId: number;
-  userName: string;
-  userAvatar: string;
+  customerId: number;
+  customerName: string;
+  customerAvatar: string;
   rating: number;
   comment: string;
   date: string;
@@ -17,13 +17,13 @@ export interface Review {
 export interface ApiReview {
   id: number;
   productId: number;
-  userId: number;
-  user: {
+  customerId: number;
+  customer: {
     id: number;
     name: string;
     avatar: string;
   } | null;
-  product?: ApiProduct;  // マイページ用（ユーザーのレビュー一覧取得時に含まれる）
+  product?: ApiProduct;  // マイページ用（カスタマーのレビュー一覧取得時に含まれる）
   rating: number;
   comment: string;
   createdAt: string;

@@ -1,11 +1,11 @@
-// ユーザー関連の型定義
-// 注: User型は features/auth/types.ts で定義されています
+// カスタマー関連の型定義
+// 注: Customer型は features/auth/types.ts で定義されています
 
 import { ApiProduct } from '../products/types';
 
-export interface UserFavorite {
+export interface CustomerFavorite {
   id: number;
-  userId: number;
+  customerId: number;
   productId: number;
   createdAt: string;
 }
@@ -13,7 +13,7 @@ export interface UserFavorite {
 // お気に入り一覧取得時のレスポンス型（商品情報含む）
 export interface ApiFavorite {
   id: number;
-  userId: number;
+  customerId: number;
   productId: number;
   product: ApiProduct;
   createdAt: string;

@@ -54,13 +54,13 @@ func (h *AuthHandler) HandleGoogleCallback(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, h.frontendURL+"/login?error=user_info")
 	}
 
-	user, err := h.authUsecase.FindOrCreateUser(userInfo)
+	cust, err := h.authUsecase.FindOrCreateCustomer(userInfo)
 	if err != nil {
-		log.Printf("Find or create user error: %v", err)
+		log.Printf("Find or create customer error: %v", err)
 		return c.Redirect(http.StatusTemporaryRedirect, h.frontendURL+"/login?error=user_create")
 	}
 
-	jwtToken, err := h.jwtService.GenerateToken(user.ID, user.Email, user.Name, user.Avatar, false, "")
+	jwtToken, err := h.jwtService.GenerateToken(cust.ID, cust.Email, cust.Name, cust.Avatar, false, "")
 	if err != nil {
 		return c.Redirect(http.StatusTemporaryRedirect, h.frontendURL+"/login?error=jwt")
 	}
@@ -113,19 +113,25 @@ func (h *AuthHandler) HandleAdminGoogleCallback(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, h.frontendURL+"/admin/auth/callback?token="+jwtToken)
 }
 
-// GetCurrentUser - 現在のユーザー取得
-func (h *AuthHandler) GetCurrentUser(c echo.Context) error {
+// GetMe - 現在のユーザー取得
+func (h *AuthHandler) GetMe(c echo.Context) error {
 	userID := c.Get("userId").(int64)
 	isAdmin := c.Get("isAdmin").(bool)
 
-	user, err := h.authUsecase.GetCurrentUser(userID, isAdmin)
+	result, err := h.authUsecase.GetCurrentCustomerOrAdmin(userID, isAdmin)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 	}
 
+	if isAdmin {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"admin":   result,
+			"isAdmin": true,
+		})
+	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"user":    user,
-		"isAdmin": isAdmin,
+		"customer": result,
+		"isAdmin":  false,
 	})
 }
 

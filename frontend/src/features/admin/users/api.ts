@@ -1,9 +1,9 @@
-// ユーザー管理関連のAPI
+// カスタマー管理関連のAPI
 
-import { ManagedUser } from './types';
+import { ManagedCustomer } from './types';
 
 // TODO: API連携時に削除
-const mockUsers: ManagedUser[] = [
+const mockCustomers: ManagedCustomer[] = [
   {
     id: 1,
     name: 'Yuki Tanaka',
@@ -34,25 +34,25 @@ const mockUsers: ManagedUser[] = [
 ];
 
 export const adminApi = {
-  // ユーザー一覧を取得
-  async getUsers(_token: string): Promise<ManagedUser[]> {
+  // カスタマー一覧を取得
+  async getCustomers(_token: string): Promise<ManagedCustomer[]> {
     // TODO: API連携時に実装
-    return mockUsers;
+    return mockCustomers;
   },
 
-  // ユーザーをBANする
-  async banUser(userId: number, reason: string, _token: string): Promise<ManagedUser> {
+  // カスタマーをBANする
+  async banCustomer(customerId: number, reason: string, _token: string): Promise<ManagedCustomer> {
     // TODO: API連携時に実装
-    const user = mockUsers.find(u => u.id === userId);
-    if (!user) throw new Error('User not found');
-    return { ...user, status: 'banned', statusReason: reason };
+    const customer = mockCustomers.find(c => c.id === customerId);
+    if (!customer) throw new Error('Customer not found');
+    return { ...customer, status: 'banned', statusReason: reason };
   },
 
-  // ユーザーのBAN/停止を解除する
-  async unbanUser(userId: number, _token: string): Promise<ManagedUser> {
+  // カスタマーのBAN/停止を解除する
+  async unbanCustomer(customerId: number, _token: string): Promise<ManagedCustomer> {
     // TODO: API連携時に実装
-    const user = mockUsers.find(u => u.id === userId);
-    if (!user) throw new Error('User not found');
-    return { ...user, status: 'active', statusReason: undefined, suspendedUntil: undefined };
+    const customer = mockCustomers.find(c => c.id === customerId);
+    if (!customer) throw new Error('Customer not found');
+    return { ...customer, status: 'active', statusReason: undefined, suspendedUntil: undefined };
   },
 };

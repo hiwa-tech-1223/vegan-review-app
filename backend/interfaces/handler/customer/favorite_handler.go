@@ -20,16 +20,16 @@ func NewFavoriteHandler(favoriteUsecase *usecase.FavoriteUsecase) *FavoriteHandl
 	return &FavoriteHandler{favoriteUsecase: favoriteUsecase}
 }
 
-// GetUserFavorites - ユーザーのお気に入り一覧取得
-func (h *FavoriteHandler) GetUserFavorites(c echo.Context) error {
-	userIDStr := c.Param("id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+// GetCustomerFavorites - カスタマーのお気に入り一覧取得
+func (h *FavoriteHandler) GetCustomerFavorites(c echo.Context) error {
+	customerIDStr := c.Param("id")
+	customerID, err := strconv.ParseInt(customerIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid customer ID"})
 	}
-	requestUserID := c.Get("userId").(int64)
+	requestCustomerID := c.Get("userId").(int64)
 
-	favorites, err := h.favoriteUsecase.GetUserFavorites(userID, requestUserID)
+	favorites, err := h.favoriteUsecase.GetCustomerFavorites(customerID, requestCustomerID)
 	if err != nil {
 		if err.Error() == "permission denied" {
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
@@ -41,20 +41,20 @@ func (h *FavoriteHandler) GetUserFavorites(c echo.Context) error {
 
 // AddFavorite - お気に入り追加
 func (h *FavoriteHandler) AddFavorite(c echo.Context) error {
-	userIDStr := c.Param("id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	customerIDStr := c.Param("id")
+	customerID, err := strconv.ParseInt(customerIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid customer ID"})
 	}
-	requestUserID := c.Get("userId").(int64)
+	requestCustomerID := c.Get("userId").(int64)
 
 	fav := new(favorite.Favorite)
 	if err := c.Bind(fav); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	fav.UserID = userID
+	fav.CustomerID = customerID
 
-	if err := h.favoriteUsecase.AddFavorite(fav, requestUserID); err != nil {
+	if err := h.favoriteUsecase.AddFavorite(fav, requestCustomerID); err != nil {
 		switch err.Error() {
 		case "permission denied":
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
@@ -69,19 +69,19 @@ func (h *FavoriteHandler) AddFavorite(c echo.Context) error {
 
 // RemoveFavorite - お気に入り削除
 func (h *FavoriteHandler) RemoveFavorite(c echo.Context) error {
-	userIDStr := c.Param("id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	customerIDStr := c.Param("id")
+	customerID, err := strconv.ParseInt(customerIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid customer ID"})
 	}
 	productIDStr := c.Param("productId")
 	productID, err := strconv.ParseInt(productIDStr, 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
 	}
-	requestUserID := c.Get("userId").(int64)
+	requestCustomerID := c.Get("userId").(int64)
 
-	if err := h.favoriteUsecase.RemoveFavorite(userID, productID, requestUserID); err != nil {
+	if err := h.favoriteUsecase.RemoveFavorite(customerID, productID, requestCustomerID); err != nil {
 		if err.Error() == "permission denied" {
 			return c.JSON(http.StatusForbidden, map[string]string{"error": err.Error()})
 		}

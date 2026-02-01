@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { Leaf, LogOut, Trash2, X } from 'lucide-react';
 import { useAuth } from '../../../auth';
-import { userApi } from '../api';
+import { customerApi } from '../api';
 import { reviewApi } from '../../reviews/api';
 import { ApiFavorite } from '../types';
 import { ApiReview } from '../../reviews/types';
@@ -10,7 +10,7 @@ import { StarRating } from '../../../../components/StarRating';
 
 export function MyPage() {
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { customer, token, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'reviews' | 'favorites'>('reviews');
   const [favorites, setFavorites] = useState<ApiFavorite[]>([]);
   const [reviews, setReviews] = useState<ApiReview[]>([]);
@@ -18,15 +18,15 @@ export function MyPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (!customer || !token) return;
 
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
         const [favoritesData, reviewsData] = await Promise.all([
-          userApi.getFavorites(user.id, token),
-          userApi.getReviews(user.id, token),
+          customerApi.getFavorites(customer.id, token),
+          customerApi.getReviews(customer.id, token),
         ]);
         setFavorites(favoritesData || []);
         setReviews(reviewsData || []);
@@ -39,7 +39,7 @@ export function MyPage() {
     };
 
     fetchData();
-  }, [user, token]);
+  }, [customer, token]);
 
   const handleLogout = () => {
     logout();
@@ -58,9 +58,9 @@ export function MyPage() {
   };
 
   const handleRemoveFavorite = async (productId: number) => {
-    if (!user || !token) return;
+    if (!customer || !token) return;
     try {
-      await userApi.removeFavorite(user.id, productId, token);
+      await customerApi.removeFavorite(customer.id, productId, token);
       setFavorites(favorites.filter(f => f.productId !== productId));
     } catch (err) {
       console.error('Failed to remove favorite:', err);
@@ -68,7 +68,7 @@ export function MyPage() {
     }
   };
 
-  if (!user) {
+  if (!customer) {
     return null;
   }
 
@@ -109,11 +109,11 @@ export function MyPage() {
             </Link>
             <div className="flex items-center gap-4">
               <img
-                src={user.avatar}
-                alt={user.name}
+                src={customer.avatar}
+                alt={customer.name}
                 className="w-10 h-10 rounded-full object-cover"
               />
-              <span style={{ color: 'var(--text)' }}>{user.name}</span>
+              <span style={{ color: 'var(--text)' }}>{customer.name}</span>
             </div>
           </div>
         </div>
@@ -124,19 +124,19 @@ export function MyPage() {
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
           <div className="flex items-start gap-6">
             <img
-              src={user.avatar}
-              alt={user.name}
+              src={customer.avatar}
+              alt={customer.name}
               className="w-24 h-24 rounded-full object-cover"
             />
             <div className="flex-1">
               <h1 className="text-2xl mb-2" style={{ color: 'var(--text)' }}>
-                {user.name}
+                {customer.name}
               </h1>
-              <p className="text-gray-600 mb-4">{user.email}</p>
+              <p className="text-gray-600 mb-4">{customer.email}</p>
               <div className="flex gap-8 mb-4">
                 <div>
                   <p className="text-sm text-gray-500">Member Since / 登録日</p>
-                  <p style={{ color: 'var(--text)' }}>{user.memberSince ? user.memberSince.split('T')[0] : '-'}</p>
+                  <p style={{ color: 'var(--text)' }}>{customer.memberSince ? customer.memberSince.split('T')[0] : '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Reviews / レビュー数</p>

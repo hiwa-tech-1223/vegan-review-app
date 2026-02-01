@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Admin, AuthContextType } from '../types';
+import { Customer, Admin, AuthContextType } from '../types';
 import { authApi } from '../api';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState(true);
@@ -16,11 +16,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await authApi.getCurrentUser(authToken);
       if (data.isAdmin) {
-        setAdmin(data.user);
-        setUser(null);
+        setAdmin(data.admin);
+        setCustomer(null);
         setIsAdmin(true);
       } else {
-        setUser(data.user);
+        setCustomer(data.customer);
         setAdmin(null);
         setIsAdmin(false);
       }
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Failed to fetch current user:', error);
       localStorage.removeItem('token');
       setToken(null);
-      setUser(null);
+      setCustomer(null);
       setAdmin(null);
       setIsAdmin(false);
     }
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
-    setUser(null);
+    setCustomer(null);
     setAdmin(null);
     setIsAdmin(false);
   };
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        customer,
         admin,
         token,
         isLoading,

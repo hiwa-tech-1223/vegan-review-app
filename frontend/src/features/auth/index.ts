@@ -3,5 +3,5 @@
 export * from './types';
 export * from './api';
 export { AuthProvider, useAuth } from './context/AuthContext';
-export { UserLogin } from './components/UserLogin';
+export { CustomerLogin } from './components/CustomerLogin';
 export { AuthCallback } from './components/AuthCallback';

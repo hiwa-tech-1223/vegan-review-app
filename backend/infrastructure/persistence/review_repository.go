@@ -3,24 +3,24 @@ package persistence
 import (
 	"time"
 
+	"backend/domain/customer"
 	"backend/domain/product"
 	"backend/domain/review"
-	"backend/domain/user"
 
 	"gorm.io/gorm"
 )
 
 // reviewModel - GORM用のDBモデル（プリミティブ型）
 type reviewModel struct {
-	ID        int64            `gorm:"primaryKey;autoIncrement"`
-	ProductID int64            `gorm:"column:product_id"`
-	Product   *product.Product `gorm:"foreignKey:ProductID"`
-	UserID    int64            `gorm:"column:user_id"`
-	User      *user.User       `gorm:"foreignKey:UserID"`
-	Rating    int              `gorm:"column:rating"`
-	Comment   string           `gorm:"column:comment"`
-	CreatedAt time.Time        `gorm:"column:created_at"`
-	UpdatedAt time.Time        `gorm:"column:updated_at"`
+	ID         int64              `gorm:"primaryKey;autoIncrement"`
+	ProductID  int64              `gorm:"column:product_id"`
+	Product    *product.Product   `gorm:"foreignKey:ProductID"`
+	CustomerID int64              `gorm:"column:customer_id"`
+	Customer   *customer.Customer `gorm:"foreignKey:CustomerID"`
+	Rating     int                `gorm:"column:rating"`
+	Comment    string             `gorm:"column:comment"`
+	CreatedAt  time.Time          `gorm:"column:created_at"`
+	UpdatedAt  time.Time          `gorm:"column:updated_at"`
 }
 
 func (reviewModel) TableName() string {
@@ -34,15 +34,15 @@ func (m *reviewModel) toEntity() (*review.Review, error) {
 	comment, _ := review.NewComment(m.Comment)
 
 	r := &review.Review{
-		ID:        m.ID,
-		ProductID: m.ProductID,
-		UserID:    m.UserID,
-		Rating:    rating,
-		Comment:   comment,
-		CreatedAt: m.CreatedAt,
-		UpdatedAt: m.UpdatedAt,
-		User:      m.User,
-		Product:   m.Product,
+		ID:         m.ID,
+		ProductID:  m.ProductID,
+		CustomerID: m.CustomerID,
+		Rating:     rating,
+		Comment:    comment,
+		CreatedAt:  m.CreatedAt,
+		UpdatedAt:  m.UpdatedAt,
+		Customer:   m.Customer,
+		Product:    m.Product,
 	}
 
 	return r, nil
@@ -51,13 +51,13 @@ func (m *reviewModel) toEntity() (*review.Review, error) {
 // fromEntity - ドメインEntity → DBモデル変換
 func reviewModelFromEntity(e *review.Review) *reviewModel {
 	return &reviewModel{
-		ID:        e.ID,
-		ProductID: e.ProductID,
-		UserID:    e.UserID,
-		Rating:    e.Rating.Int(),
-		Comment:   e.Comment.String(),
-		CreatedAt: e.CreatedAt,
-		UpdatedAt: e.UpdatedAt,
+		ID:         e.ID,
+		ProductID:  e.ProductID,
+		CustomerID: e.CustomerID,
+		Rating:     e.Rating.Int(),
+		Comment:    e.Comment.String(),
+		CreatedAt:  e.CreatedAt,
+		UpdatedAt:  e.UpdatedAt,
 	}
 }
 
@@ -72,7 +72,7 @@ func NewReviewRepository(db *gorm.DB) review.ReviewRepository {
 
 func (r *reviewRepository) FindByProductID(productID int64) ([]review.Review, error) {
 	var models []reviewModel
-	if err := r.db.Preload("User").Where("product_id = ?", productID).Order("created_at DESC").Find(&models).Error; err != nil {
+	if err := r.db.Preload("Customer").Where("product_id = ?", productID).Order("created_at DESC").Find(&models).Error; err != nil {
 		return nil, err
 	}
 
@@ -87,9 +87,9 @@ func (r *reviewRepository) FindByProductID(productID int64) ([]review.Review, er
 	return reviews, nil
 }
 
-func (r *reviewRepository) FindByUserID(userID int64) ([]review.Review, error) {
+func (r *reviewRepository) FindByCustomerID(customerID int64) ([]review.Review, error) {
 	var models []reviewModel
-	if err := r.db.Preload("Product").Preload("Product.Categories").Where("user_id = ?", userID).Order("created_at DESC").Find(&models).Error; err != nil {
+	if err := r.db.Preload("Product").Preload("Product.Categories").Where("customer_id = ?", customerID).Order("created_at DESC").Find(&models).Error; err != nil {
 		return nil, err
 	}
 
@@ -112,9 +112,9 @@ func (r *reviewRepository) FindByID(id int64) (*review.Review, error) {
 	return model.toEntity()
 }
 
-func (r *reviewRepository) FindByProductIDAndUserID(productID, userID int64) (*review.Review, error) {
+func (r *reviewRepository) FindByProductIDAndCustomerID(productID, customerID int64) (*review.Review, error) {
 	var model reviewModel
-	if err := r.db.Where("product_id = ? AND user_id = ?", productID, userID).First(&model).Error; err != nil {
+	if err := r.db.Where("product_id = ? AND customer_id = ?", productID, customerID).First(&model).Error; err != nil {
 		return nil, err
 	}
 	return model.toEntity()
@@ -126,8 +126,8 @@ func (r *reviewRepository) Create(rev *review.Review) error {
 		return err
 	}
 
-	// Reload with User
-	if err := r.db.Preload("User").First(model, "id = ?", model.ID).Error; err != nil {
+	// Reload with Customer
+	if err := r.db.Preload("Customer").First(model, "id = ?", model.ID).Error; err != nil {
 		return err
 	}
 
@@ -148,9 +148,9 @@ func (r *reviewRepository) Update(rev *review.Review) error {
 		return err
 	}
 
-	// Reload with User
+	// Reload with Customer
 	var model reviewModel
-	if err := r.db.Preload("User").First(&model, "id = ?", rev.ID).Error; err != nil {
+	if err := r.db.Preload("Customer").First(&model, "id = ?", rev.ID).Error; err != nil {
 		return err
 	}
 

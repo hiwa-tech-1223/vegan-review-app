@@ -1,6 +1,6 @@
 // 認証関連の型定義
 
-export interface User {
+export interface Customer {
   id: number;
   name: string;
   email: string;
@@ -17,7 +17,7 @@ export interface Admin {
 }
 
 export interface AuthContextType {
-  user: User | null;
+  customer: Customer | null;
   admin: Admin | null;
   token: string | null;
   isLoading: boolean;

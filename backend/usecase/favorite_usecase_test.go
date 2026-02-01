@@ -9,23 +9,23 @@ import (
 // ===== Mock Repository =====
 
 type mockFavoriteRepository struct {
-	favorites               []favorite.Favorite
-	findByUserIDFunc        func(userID int64) ([]favorite.Favorite, error)
-	findByUserIDAndProdFunc func(userID, productID int64) (*favorite.Favorite, error)
-	createFunc              func(fav *favorite.Favorite) error
-	deleteFunc              func(userID, productID int64) error
+	favorites                  []favorite.Favorite
+	findByCustomerIDFunc       func(customerID int64) ([]favorite.Favorite, error)
+	findByCustomerIDAndProdFunc func(customerID, productID int64) (*favorite.Favorite, error)
+	createFunc                 func(fav *favorite.Favorite) error
+	deleteFunc                 func(customerID, productID int64) error
 }
 
-func (m *mockFavoriteRepository) FindByUserID(userID int64) ([]favorite.Favorite, error) {
-	if m.findByUserIDFunc != nil {
-		return m.findByUserIDFunc(userID)
+func (m *mockFavoriteRepository) FindByCustomerID(customerID int64) ([]favorite.Favorite, error) {
+	if m.findByCustomerIDFunc != nil {
+		return m.findByCustomerIDFunc(customerID)
 	}
 	return m.favorites, nil
 }
 
-func (m *mockFavoriteRepository) FindByUserIDAndProductID(userID, productID int64) (*favorite.Favorite, error) {
-	if m.findByUserIDAndProdFunc != nil {
-		return m.findByUserIDAndProdFunc(userID, productID)
+func (m *mockFavoriteRepository) FindByCustomerIDAndProductID(customerID, productID int64) (*favorite.Favorite, error) {
+	if m.findByCustomerIDAndProdFunc != nil {
+		return m.findByCustomerIDAndProdFunc(customerID, productID)
 	}
 	return nil, errors.New("not found")
 }
@@ -37,49 +37,49 @@ func (m *mockFavoriteRepository) Create(fav *favorite.Favorite) error {
 	return nil
 }
 
-func (m *mockFavoriteRepository) Delete(userID, productID int64) error {
+func (m *mockFavoriteRepository) Delete(customerID, productID int64) error {
 	if m.deleteFunc != nil {
-		return m.deleteFunc(userID, productID)
+		return m.deleteFunc(customerID, productID)
 	}
 	return nil
 }
 
 // ===== Tests =====
 
-func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
+func TestFavoriteUsecase_GetCustomerFavorites(t *testing.T) {
 	testCases := []struct {
-		name          string
-		userID        int64
-		requestUserID int64
-		mockFavorites []favorite.Favorite
-		wantErr       string
-		wantCount     int
+		name              string
+		customerID        int64
+		requestCustomerID int64
+		mockFavorites     []favorite.Favorite
+		wantErr           string
+		wantCount         int
 	}{
 		{
-			name:          "自分のお気に入りを取得できる",
-			userID:        1,
-			requestUserID: 1,
+			name:              "自分のお気に入りを取得できる",
+			customerID:        1,
+			requestCustomerID: 1,
 			mockFavorites: []favorite.Favorite{
-				{ID: 1, UserID: 1, ProductID: 1},
-				{ID: 2, UserID: 1, ProductID: 2},
+				{ID: 1, CustomerID: 1, ProductID: 1},
+				{ID: 2, CustomerID: 1, ProductID: 2},
 			},
 			wantErr:   "",
 			wantCount: 2,
 		},
 		{
-			name:          "他ユーザーのお気に入りは取得できない",
-			userID:        2,
-			requestUserID: 1,
-			wantErr:       "permission denied",
-			wantCount:     0,
+			name:              "他カスタマーのお気に入りは取得できない",
+			customerID:        2,
+			requestCustomerID: 1,
+			wantErr:           "permission denied",
+			wantCount:         0,
 		},
 		{
-			name:          "お気に入りが0件でも正常に取得できる",
-			userID:        1,
-			requestUserID: 1,
-			mockFavorites: []favorite.Favorite{},
-			wantErr:       "",
-			wantCount:     0,
+			name:              "お気に入りが0件でも正常に取得できる",
+			customerID:        1,
+			requestCustomerID: 1,
+			mockFavorites:     []favorite.Favorite{},
+			wantErr:           "",
+			wantCount:         0,
 		},
 	}
 
@@ -90,7 +90,7 @@ func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
 			}
 			usecase := NewFavoriteUsecase(mockRepo)
 
-			favorites, err := usecase.GetUserFavorites(tc.userID, tc.requestUserID)
+			favorites, err := usecase.GetCustomerFavorites(tc.customerID, tc.requestCustomerID)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -117,63 +117,63 @@ func TestFavoriteUsecase_GetUserFavorites(t *testing.T) {
 
 func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 	testCases := []struct {
-		name          string
-		fav           *favorite.Favorite
-		requestUserID int64
-		existingFav   *favorite.Favorite
-		repoErr       error
-		wantErr       string
+		name              string
+		fav               *favorite.Favorite
+		requestCustomerID int64
+		existingFav       *favorite.Favorite
+		repoErr           error
+		wantErr           string
 	}{
 		{
 			name: "自分のアカウントにお気に入りを追加できる",
 			fav: &favorite.Favorite{
-				UserID:    1,
-				ProductID: 1,
+				CustomerID: 1,
+				ProductID:  1,
 			},
-			requestUserID: 1,
-			existingFav:   nil,
-			wantErr:       "",
+			requestCustomerID: 1,
+			existingFav:       nil,
+			wantErr:           "",
 		},
 		{
-			name: "他ユーザーのアカウントには追加できない",
+			name: "他カスタマーのアカウントには追加できない",
 			fav: &favorite.Favorite{
-				UserID:    2,
-				ProductID: 1,
+				CustomerID: 2,
+				ProductID:  1,
 			},
-			requestUserID: 1,
-			wantErr:       "permission denied",
+			requestCustomerID: 1,
+			wantErr:           "permission denied",
 		},
 		{
 			name: "既に追加済みの商品は追加できない",
 			fav: &favorite.Favorite{
-				UserID:    1,
-				ProductID: 1,
+				CustomerID: 1,
+				ProductID:  1,
 			},
-			requestUserID: 1,
+			requestCustomerID: 1,
 			existingFav: &favorite.Favorite{
-				ID:        1,
-				UserID:    1,
-				ProductID: 1,
+				ID:         1,
+				CustomerID: 1,
+				ProductID:  1,
 			},
 			wantErr: "already in favorites",
 		},
 		{
 			name: "リポジトリエラー時はエラーを返す",
 			fav: &favorite.Favorite{
-				UserID:    1,
-				ProductID: 1,
+				CustomerID: 1,
+				ProductID:  1,
 			},
-			requestUserID: 1,
-			existingFav:   nil,
-			repoErr:       errors.New("database error"),
-			wantErr:       "database error",
+			requestCustomerID: 1,
+			existingFav:       nil,
+			repoErr:           errors.New("database error"),
+			wantErr:           "database error",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepo := &mockFavoriteRepository{
-				findByUserIDAndProdFunc: func(userID, productID int64) (*favorite.Favorite, error) {
+				findByCustomerIDAndProdFunc: func(customerID, productID int64) (*favorite.Favorite, error) {
 					if tc.existingFav != nil {
 						return tc.existingFav, nil
 					}
@@ -185,7 +185,7 @@ func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 			}
 			usecase := NewFavoriteUsecase(mockRepo)
 
-			err := usecase.AddFavorite(tc.fav, tc.requestUserID)
+			err := usecase.AddFavorite(tc.fav, tc.requestCustomerID)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -207,47 +207,47 @@ func TestFavoriteUsecase_AddFavorite(t *testing.T) {
 
 func TestFavoriteUsecase_RemoveFavorite(t *testing.T) {
 	testCases := []struct {
-		name          string
-		userID        int64
-		productID     int64
-		requestUserID int64
-		repoErr       error
-		wantErr       string
+		name              string
+		customerID        int64
+		productID         int64
+		requestCustomerID int64
+		repoErr           error
+		wantErr           string
 	}{
 		{
-			name:          "自分のお気に入りから削除できる",
-			userID:        1,
-			productID:     1,
-			requestUserID: 1,
-			wantErr:       "",
+			name:              "自分のお気に入りから削除できる",
+			customerID:        1,
+			productID:         1,
+			requestCustomerID: 1,
+			wantErr:           "",
 		},
 		{
-			name:          "他ユーザーのお気に入りからは削除できない",
-			userID:        2,
-			productID:     1,
-			requestUserID: 1,
-			wantErr:       "permission denied",
+			name:              "他カスタマーのお気に入りからは削除できない",
+			customerID:        2,
+			productID:         1,
+			requestCustomerID: 1,
+			wantErr:           "permission denied",
 		},
 		{
-			name:          "リポジトリエラー時はエラーを返す",
-			userID:        1,
-			productID:     1,
-			requestUserID: 1,
-			repoErr:       errors.New("database error"),
-			wantErr:       "database error",
+			name:              "リポジトリエラー時はエラーを返す",
+			customerID:        1,
+			productID:         1,
+			requestCustomerID: 1,
+			repoErr:           errors.New("database error"),
+			wantErr:           "database error",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepo := &mockFavoriteRepository{
-				deleteFunc: func(userID, productID int64) error {
+				deleteFunc: func(customerID, productID int64) error {
 					return tc.repoErr
 				},
 			}
 			usecase := NewFavoriteUsecase(mockRepo)
 
-			err := usecase.RemoveFavorite(tc.userID, tc.productID, tc.requestUserID)
+			err := usecase.RemoveFavorite(tc.customerID, tc.productID, tc.requestCustomerID)
 
 			if tc.wantErr != "" {
 				if err == nil {

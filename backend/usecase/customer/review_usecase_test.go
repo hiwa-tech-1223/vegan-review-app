@@ -10,13 +10,13 @@ import (
 // ===== Mock Repositories =====
 
 type mockReviewRepository struct {
-	reviews                    []review.Review
-	findByIDFunc               func(id int64) (*review.Review, error)
-	findByProductIDAndUserFunc func(productID, userID int64) (*review.Review, error)
-	createFunc                 func(r *review.Review) error
-	updateFunc                 func(r *review.Review) error
-	deleteFunc                 func(id int64) error
-	getRatingStatsFunc         func(productID int64) (float64, int64, error)
+	reviews                        []review.Review
+	findByIDFunc                   func(id int64) (*review.Review, error)
+	findByProductIDAndCustomerFunc func(productID, customerID int64) (*review.Review, error)
+	createFunc                     func(r *review.Review) error
+	updateFunc                     func(r *review.Review) error
+	deleteFunc                     func(id int64) error
+	getRatingStatsFunc             func(productID int64) (float64, int64, error)
 }
 
 func (m *mockReviewRepository) FindByProductID(productID int64) ([]review.Review, error) {
@@ -29,10 +29,10 @@ func (m *mockReviewRepository) FindByProductID(productID int64) ([]review.Review
 	return result, nil
 }
 
-func (m *mockReviewRepository) FindByUserID(userID int64) ([]review.Review, error) {
+func (m *mockReviewRepository) FindByCustomerID(customerID int64) ([]review.Review, error) {
 	var result []review.Review
 	for _, r := range m.reviews {
-		if r.UserID == userID {
+		if r.CustomerID == customerID {
 			result = append(result, r)
 		}
 	}
@@ -51,9 +51,9 @@ func (m *mockReviewRepository) FindByID(id int64) (*review.Review, error) {
 	return nil, errors.New("not found")
 }
 
-func (m *mockReviewRepository) FindByProductIDAndUserID(productID, userID int64) (*review.Review, error) {
-	if m.findByProductIDAndUserFunc != nil {
-		return m.findByProductIDAndUserFunc(productID, userID)
+func (m *mockReviewRepository) FindByProductIDAndCustomerID(productID, customerID int64) (*review.Review, error) {
+	if m.findByProductIDAndCustomerFunc != nil {
+		return m.findByProductIDAndCustomerFunc(productID, customerID)
 	}
 	return nil, errors.New("not found")
 }
@@ -145,7 +145,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 	testCases := []struct {
 		name             string
 		productID        int64
-		userID           int64
+		customerID       int64
 		rating           int
 		comment          string
 		existingReview   *review.Review
@@ -156,7 +156,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 		{
 			name:             "新規レビューを作成できる",
 			productID:        1,
-			userID:           1,
+			customerID:       1,
 			rating:           5,
 			comment:          "Great product! I love it!",
 			existingReview:   nil,
@@ -164,15 +164,15 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 			wantRatingUpdate: true,
 		},
 		{
-			name:      "既にレビュー済みの場合はエラー",
-			productID: 1,
-			userID:    1,
-			rating:    5,
-			comment:   "Another review text here",
+			name:       "既にレビュー済みの場合はエラー",
+			productID:  1,
+			customerID: 1,
+			rating:     5,
+			comment:    "Another review text here",
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "you have already reviewed this product",
 			wantRatingUpdate: false,
@@ -180,7 +180,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 		{
 			name:             "リポジトリエラー時はエラーを返す",
 			productID:        1,
-			userID:           1,
+			customerID:       1,
 			rating:           4,
 			comment:          "Good product review",
 			existingReview:   nil,
@@ -191,7 +191,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 		{
 			name:             "評価が範囲外の場合はエラー",
 			productID:        1,
-			userID:           1,
+			customerID:       1,
 			rating:           6,
 			comment:          "Invalid rating test",
 			existingReview:   nil,
@@ -201,7 +201,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 		{
 			name:             "コメントが短すぎる場合はエラー",
 			productID:        1,
-			userID:           1,
+			customerID:       1,
 			rating:           5,
 			comment:          "Short",
 			existingReview:   nil,
@@ -213,7 +213,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockReviewRepo := &mockReviewRepository{
-				findByProductIDAndUserFunc: func(productID, userID int64) (*review.Review, error) {
+				findByProductIDAndCustomerFunc: func(productID, customerID int64) (*review.Review, error) {
 					if tc.existingReview != nil {
 						return tc.existingReview, nil
 					}
@@ -226,7 +226,7 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 			mockProductRepo := &mockProductRepository{}
 			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			_, err := uc.CreateReview(tc.productID, tc.userID, tc.rating, tc.comment)
+			_, err := uc.CreateReview(tc.productID, tc.customerID, tc.rating, tc.comment)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -256,72 +256,72 @@ func TestReviewUsecase_CreateReview(t *testing.T) {
 
 func TestReviewUsecase_DeleteReview(t *testing.T) {
 	testCases := []struct {
-		name             string
-		reviewID         int64
-		requestUserID    int64
-		isAdmin          bool
-		existingReview   *review.Review
-		deleteErr        error
-		wantErr          string
-		wantRatingUpdate bool
+		name              string
+		reviewID          int64
+		requestCustomerID int64
+		isAdmin           bool
+		existingReview    *review.Review
+		deleteErr         error
+		wantErr           string
+		wantRatingUpdate  bool
 	}{
 		{
-			name:          "自分のレビューを削除できる",
-			reviewID:      1,
-			requestUserID: 1,
-			isAdmin:       false,
+			name:              "自分のレビューを削除できる",
+			reviewID:          1,
+			requestCustomerID: 1,
+			isAdmin:           false,
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "",
 			wantRatingUpdate: true,
 		},
 		{
-			name:          "管理者は他人のレビューを削除できる",
-			reviewID:      1,
-			requestUserID: 100,
-			isAdmin:       true,
+			name:              "管理者は他人のレビューを削除できる",
+			reviewID:          1,
+			requestCustomerID: 100,
+			isAdmin:           true,
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "",
 			wantRatingUpdate: true,
 		},
 		{
-			name:          "一般ユーザーは他人のレビューを削除できない",
-			reviewID:      1,
-			requestUserID: 2,
-			isAdmin:       false,
+			name:              "一般カスタマーは他人のレビューを削除できない",
+			reviewID:          1,
+			requestCustomerID: 2,
+			isAdmin:           false,
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "permission denied",
 			wantRatingUpdate: false,
 		},
 		{
-			name:             "存在しないレビューは削除できない",
-			reviewID:         999,
-			requestUserID:    1,
-			isAdmin:          false,
-			existingReview:   nil,
-			wantErr:          "review not found",
-			wantRatingUpdate: false,
+			name:              "存在しないレビューは削除できない",
+			reviewID:          999,
+			requestCustomerID: 1,
+			isAdmin:           false,
+			existingReview:    nil,
+			wantErr:           "review not found",
+			wantRatingUpdate:  false,
 		},
 		{
-			name:          "リポジトリエラー時はエラーを返す",
-			reviewID:      1,
-			requestUserID: 1,
-			isAdmin:       false,
+			name:              "リポジトリエラー時はエラーを返す",
+			reviewID:          1,
+			requestCustomerID: 1,
+			isAdmin:           false,
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			deleteErr:        errors.New("database error"),
 			wantErr:          "database error",
@@ -345,7 +345,7 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 			mockProductRepo := &mockProductRepository{}
 			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			err := uc.DeleteReview(tc.reviewID, tc.requestUserID, tc.isAdmin)
+			err := uc.DeleteReview(tc.reviewID, tc.requestCustomerID, tc.isAdmin)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -375,9 +375,9 @@ func TestReviewUsecase_DeleteReview(t *testing.T) {
 
 func TestReviewUsecase_GetProductReviews(t *testing.T) {
 	mockReviews := []review.Review{
-		{ID: 1, ProductID: 1, UserID: 1, Rating: mustRating(5)},
-		{ID: 2, ProductID: 1, UserID: 2, Rating: mustRating(4)},
-		{ID: 3, ProductID: 2, UserID: 1, Rating: mustRating(3)},
+		{ID: 1, ProductID: 1, CustomerID: 1, Rating: mustRating(5)},
+		{ID: 2, ProductID: 1, CustomerID: 2, Rating: mustRating(4)},
+		{ID: 3, ProductID: 2, CustomerID: 1, Rating: mustRating(3)},
 	}
 
 	mockReviewRepo := &mockReviewRepository{reviews: mockReviews}
@@ -407,19 +407,19 @@ func TestReviewUsecase_GetProductReviews(t *testing.T) {
 	})
 }
 
-func TestReviewUsecase_GetUserReviews(t *testing.T) {
+func TestReviewUsecase_GetCustomerReviews(t *testing.T) {
 	mockReviews := []review.Review{
-		{ID: 1, ProductID: 1, UserID: 1, Rating: mustRating(5)},
-		{ID: 2, ProductID: 2, UserID: 1, Rating: mustRating(4)},
-		{ID: 3, ProductID: 1, UserID: 2, Rating: mustRating(3)},
+		{ID: 1, ProductID: 1, CustomerID: 1, Rating: mustRating(5)},
+		{ID: 2, ProductID: 2, CustomerID: 1, Rating: mustRating(4)},
+		{ID: 3, ProductID: 1, CustomerID: 2, Rating: mustRating(3)},
 	}
 
 	mockReviewRepo := &mockReviewRepository{reviews: mockReviews}
 	mockProductRepo := &mockProductRepository{}
 	uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-	t.Run("ユーザーのレビュー一覧を取得できる", func(t *testing.T) {
-		reviews, err := uc.GetUserReviews(1)
+	t.Run("カスタマーのレビュー一覧を取得できる", func(t *testing.T) {
+		reviews, err := uc.GetCustomerReviews(1)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 			return
@@ -432,95 +432,95 @@ func TestReviewUsecase_GetUserReviews(t *testing.T) {
 
 func TestReviewUsecase_UpdateReview(t *testing.T) {
 	testCases := []struct {
-		name             string
-		reviewID         int64
-		requestUserID    int64
-		rating           int
-		comment          string
-		existingReview   *review.Review
-		updateErr        error
-		wantErr          string
-		wantRatingUpdate bool
+		name              string
+		reviewID          int64
+		requestCustomerID int64
+		rating            int
+		comment           string
+		existingReview    *review.Review
+		updateErr         error
+		wantErr           string
+		wantRatingUpdate  bool
 	}{
 		{
-			name:          "自分のレビューを更新できる",
-			reviewID:      1,
-			requestUserID: 1,
-			rating:        4,
-			comment:       "Updated comment text",
+			name:              "自分のレビューを更新できる",
+			reviewID:          1,
+			requestCustomerID: 1,
+			rating:            4,
+			comment:           "Updated comment text",
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
-				Rating:    mustRating(5),
-				Comment:   mustComment("Original comment text"),
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
+				Rating:     mustRating(5),
+				Comment:    mustComment("Original comment text"),
 			},
 			wantErr:          "",
 			wantRatingUpdate: true,
 		},
 		{
-			name:          "他人のレビューは更新できない",
-			reviewID:      1,
-			requestUserID: 2,
-			rating:        4,
-			comment:       "Trying to update text",
+			name:              "他人のレビューは更新できない",
+			reviewID:          1,
+			requestCustomerID: 2,
+			rating:            4,
+			comment:           "Trying to update text",
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "permission denied",
 			wantRatingUpdate: false,
 		},
 		{
-			name:             "存在しないレビューは更新できない",
-			reviewID:         999,
-			requestUserID:    1,
-			rating:           4,
-			comment:          "Non-existent review",
-			existingReview:   nil,
-			wantErr:          "review not found",
-			wantRatingUpdate: false,
+			name:              "存在しないレビューは更新できない",
+			reviewID:          999,
+			requestCustomerID: 1,
+			rating:            4,
+			comment:           "Non-existent review",
+			existingReview:    nil,
+			wantErr:           "review not found",
+			wantRatingUpdate:  false,
 		},
 		{
-			name:          "リポジトリエラー時はエラーを返す",
-			reviewID:      1,
-			requestUserID: 1,
-			rating:        4,
-			comment:       "Update error test",
+			name:              "リポジトリエラー時はエラーを返す",
+			reviewID:          1,
+			requestCustomerID: 1,
+			rating:            4,
+			comment:           "Update error test",
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			updateErr:        errors.New("database error"),
 			wantErr:          "database error",
 			wantRatingUpdate: false,
 		},
 		{
-			name:          "評価が範囲外の場合はエラー",
-			reviewID:      1,
-			requestUserID: 1,
-			rating:        0,
-			comment:       "Rating out of range",
+			name:              "評価が範囲外の場合はエラー",
+			reviewID:          1,
+			requestCustomerID: 1,
+			rating:            0,
+			comment:           "Rating out of range",
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "rating must be between 1 and 5",
 			wantRatingUpdate: false,
 		},
 		{
-			name:          "コメントが短すぎる場合はエラー",
-			reviewID:      1,
-			requestUserID: 1,
-			rating:        4,
-			comment:       "Short",
+			name:              "コメントが短すぎる場合はエラー",
+			reviewID:          1,
+			requestCustomerID: 1,
+			rating:            4,
+			comment:           "Short",
 			existingReview: &review.Review{
-				ID:        1,
-				ProductID: 1,
-				UserID:    1,
+				ID:         1,
+				ProductID:  1,
+				CustomerID: 1,
 			},
 			wantErr:          "comment must be at least 10 characters",
 			wantRatingUpdate: false,
@@ -543,7 +543,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 			mockProductRepo := &mockProductRepository{}
 			uc := NewReviewUsecase(mockReviewRepo, mockProductRepo)
 
-			r, err := uc.UpdateReview(tc.reviewID, tc.requestUserID, tc.rating, tc.comment)
+			r, err := uc.UpdateReview(tc.reviewID, tc.requestCustomerID, tc.rating, tc.comment)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -582,7 +582,7 @@ func TestReviewUsecase_UpdateReview(t *testing.T) {
 func TestReviewUsecase_ValidationErrors(t *testing.T) {
 	t.Run("Rating validation", func(t *testing.T) {
 		mockReviewRepo := &mockReviewRepository{
-			findByProductIDAndUserFunc: func(productID, userID int64) (*review.Review, error) {
+			findByProductIDAndCustomerFunc: func(productID, customerID int64) (*review.Review, error) {
 				return nil, errors.New("not found")
 			},
 		}
@@ -604,7 +604,7 @@ func TestReviewUsecase_ValidationErrors(t *testing.T) {
 
 	t.Run("Comment validation", func(t *testing.T) {
 		mockReviewRepo := &mockReviewRepository{
-			findByProductIDAndUserFunc: func(productID, userID int64) (*review.Review, error) {
+			findByProductIDAndCustomerFunc: func(productID, customerID int64) (*review.Review, error) {
 				return nil, errors.New("not found")
 			},
 		}

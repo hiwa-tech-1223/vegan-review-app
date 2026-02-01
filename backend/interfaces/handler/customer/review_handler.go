@@ -35,15 +35,15 @@ func (h *ReviewHandler) GetProductReviews(c echo.Context) error {
 	return c.JSON(http.StatusOK, reviews)
 }
 
-// GetUserReviews - ユーザーのレビュー一覧取得
-func (h *ReviewHandler) GetUserReviews(c echo.Context) error {
-	userIDStr := c.Param("id")
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+// GetCustomerReviews - カスタマーのレビュー一覧取得
+func (h *ReviewHandler) GetCustomerReviews(c echo.Context) error {
+	customerIDStr := c.Param("id")
+	customerID, err := strconv.ParseInt(customerIDStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid customer ID"})
 	}
 
-	reviews, err := h.reviewUsecase.GetUserReviews(userID)
+	reviews, err := h.reviewUsecase.GetCustomerReviews(customerID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -57,7 +57,7 @@ func (h *ReviewHandler) CreateReview(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid product ID"})
 	}
-	userID := c.Get("userId").(int64)
+	customerID := c.Get("userId").(int64)
 
 	var req struct {
 		Rating  int    `json:"rating"`
@@ -67,7 +67,7 @@ func (h *ReviewHandler) CreateReview(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	rev, err := h.reviewUsecase.CreateReview(productID, userID, req.Rating, req.Comment)
+	rev, err := h.reviewUsecase.CreateReview(productID, customerID, req.Rating, req.Comment)
 	if err != nil {
 		// バリデーションエラー
 		if isValidationError(err) {
@@ -88,10 +88,10 @@ func (h *ReviewHandler) DeleteReview(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid review ID"})
 	}
-	userID := c.Get("userId").(int64)
+	customerID := c.Get("userId").(int64)
 	isAdmin := c.Get("isAdmin").(bool)
 
-	if err := h.reviewUsecase.DeleteReview(id, userID, isAdmin); err != nil {
+	if err := h.reviewUsecase.DeleteReview(id, customerID, isAdmin); err != nil {
 		switch err.Error() {
 		case "review not found":
 			return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
@@ -111,7 +111,7 @@ func (h *ReviewHandler) UpdateReview(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid review ID"})
 	}
-	userID := c.Get("userId").(int64)
+	customerID := c.Get("userId").(int64)
 
 	var req struct {
 		Rating  int    `json:"rating"`
@@ -121,7 +121,7 @@ func (h *ReviewHandler) UpdateReview(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	rev, err := h.reviewUsecase.UpdateReview(id, userID, req.Rating, req.Comment)
+	rev, err := h.reviewUsecase.UpdateReview(id, customerID, req.Rating, req.Comment)
 	if err != nil {
 		// バリデーションエラー
 		if isValidationError(err) {

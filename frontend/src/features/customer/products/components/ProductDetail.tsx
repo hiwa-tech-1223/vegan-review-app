@@ -5,13 +5,13 @@ import { useAuth } from '../../../auth';
 import { productApi } from '../api';
 import { ApiProduct } from '../types';
 import { reviewApi, ApiReview } from '../../reviews';
-import { userApi } from '../../users';
+import { customerApi } from '../../users';
 import { StarRating } from '../../../../components/StarRating';
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { customer, token } = useAuth();
 
   // 商品データ
   const [product, setProduct] = useState<ApiProduct | null>(null);
@@ -33,8 +33,8 @@ export function ProductDetail() {
   const [reviewError, setReviewError] = useState<string | null>(null);
 
   // 編集モード（既存レビューがある場合）
-  const [existingUserReview, setExistingUserReview] = useState<ApiReview | null>(null);
-  const isEditMode = existingUserReview !== null;
+  const [existingCustomerReview, setExistingCustomerReview] = useState<ApiReview | null>(null);
+  const isEditMode = existingCustomerReview !== null;
 
   // 商品詳細を取得
   useEffect(() => {
@@ -56,7 +56,7 @@ export function ProductDetail() {
   }, [id]);
 
   // レビュー一覧を取得
-  const userId = user?.id;
+  const customerId = customer?.id;
   useEffect(() => {
     const fetchReviews = async () => {
       if (!id) return;
@@ -65,15 +65,15 @@ export function ProductDetail() {
         const data = await reviewApi.getProductReviews(Number(id));
         setReviews(data ?? []);
 
-        // ログインユーザーの既存レビューをチェック
-        if (userId) {
-          const userReview = data?.find(r => r.userId === userId);
-          if (userReview) {
-            setExistingUserReview(userReview);
-            setRating(userReview.rating);
-            setComment(userReview.comment);
+        // ログインカスタマーの既存レビューをチェック
+        if (customerId) {
+          const customerReview = data?.find(r => r.customerId === customerId);
+          if (customerReview) {
+            setExistingCustomerReview(customerReview);
+            setRating(customerReview.rating);
+            setComment(customerReview.comment);
           } else {
-            setExistingUserReview(null);
+            setExistingCustomerReview(null);
           }
         }
       } catch (err) {
@@ -84,14 +84,14 @@ export function ProductDetail() {
       }
     };
     fetchReviews();
-  }, [id, userId]);
+  }, [id, customerId]);
 
   // お気に入り状態を取得
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (!user || !token || !id) return;
+      if (!customer || !token || !id) return;
       try {
-        const favorites = await userApi.getFavorites(user.id, token);
+        const favorites = await customerApi.getFavorites(customer.id, token);
         const isFav = favorites?.some((f: { productId: number }) => f.productId === Number(id)) ?? false;
         setIsFavorite(isFav);
       } catch (err) {
@@ -99,7 +99,7 @@ export function ProductDetail() {
       }
     };
     fetchFavorites();
-  }, [user, token, id]);
+  }, [customer, token, id]);
 
   // レビューのバリデーション
   const validateReview = (): string | null => {
@@ -123,7 +123,7 @@ export function ProductDetail() {
   // レビュー投稿/更新
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !token) {
+    if (!customer || !token) {
       navigate('/login');
       return;
     }
@@ -141,10 +141,10 @@ export function ProductDetail() {
     try {
       let updatedReview: ApiReview;
 
-      if (isEditMode && existingUserReview) {
+      if (isEditMode && existingCustomerReview) {
         // 更新モード
         updatedReview = await reviewApi.updateReview(
-          existingUserReview.id,
+          existingCustomerReview.id,
           { rating, comment },
           token
         );
@@ -152,12 +152,12 @@ export function ProductDetail() {
         setReviews(prev => prev.map(r =>
           r.id === updatedReview.id ? updatedReview : r
         ));
-        setExistingUserReview(updatedReview);
+        setExistingCustomerReview(updatedReview);
       } else {
         // 新規作成モード
         updatedReview = await reviewApi.createReview(Number(id), { rating, comment }, token);
         setReviews(prev => [updatedReview, ...prev]);
-        setExistingUserReview(updatedReview);
+        setExistingCustomerReview(updatedReview);
       }
 
       // 商品の評価を再取得して更新
@@ -174,7 +174,7 @@ export function ProductDetail() {
 
   // お気に入り切り替え
   const toggleFavorite = async () => {
-    if (!user || !token) {
+    if (!customer || !token) {
       navigate('/login');
       return;
     }
@@ -183,10 +183,10 @@ export function ProductDetail() {
     setIsTogglingFavorite(true);
     try {
       if (isFavorite) {
-        await userApi.removeFavorite(user.id, Number(id), token);
+        await customerApi.removeFavorite(customer.id, Number(id), token);
         setIsFavorite(false);
       } else {
-        await userApi.addFavorite(user.id, Number(id), token);
+        await customerApi.addFavorite(customer.id, Number(id), token);
         setIsFavorite(true);
       }
     } catch (err) {
@@ -500,14 +500,14 @@ export function ProductDetail() {
                 <div key={review.id} className="border-b pb-6 last:border-b-0">
                   <div className="flex items-start gap-4">
                     <img
-                      src={review.user?.avatar || 'https://placehold.co/48x48?text=User'}
-                      alt={review.user?.name || 'User'}
+                      src={review.customer?.avatar || 'https://placehold.co/48x48?text=Customer'}
+                      alt={review.customer?.name || 'Customer'}
                       className="w-12 h-12 rounded-full object-cover"
                     />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <div>
-                          <p style={{ color: 'var(--text)' }}>{review.user?.name || 'Anonymous'}</p>
+                          <p style={{ color: 'var(--text)' }}>{review.customer?.name || 'Anonymous'}</p>
                           <p className="text-sm text-gray-500">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </p>

@@ -11,7 +11,7 @@ export function AdminHeader({ admin }: AdminHeaderProps) {
   const isProductsActive = location.pathname.includes('/admin/products');
   const isCategoriesActive = location.pathname.includes('/admin/categories');
   const isReviewsActive = location.pathname.includes('/admin/reviews');
-  const isUsersActive = location.pathname.includes('/admin/users');
+  const isCustomersActive = location.pathname.includes('/admin/customers');
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -65,14 +65,14 @@ export function AdminHeader({ admin }: AdminHeaderProps) {
             Reviews
           </Link>
           <Link
-            to="/admin/users"
+            to="/admin/customers"
             className="px-4 py-2 rounded-lg transition-all"
             style={{
-              backgroundColor: isUsersActive ? '#4A7C59' : 'transparent',
-              color: isUsersActive ? 'white' : '#333333'
+              backgroundColor: isCustomersActive ? '#4A7C59' : 'transparent',
+              color: isCustomersActive ? 'white' : '#333333'
             }}
           >
-            Users
+            Customers
           </Link>
         </nav>
       </div>
