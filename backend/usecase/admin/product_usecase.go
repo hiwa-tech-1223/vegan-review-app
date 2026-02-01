@@ -126,16 +126,16 @@ func (u *AdminProductUsecase) GetProduct(id int64) (*product.Product, error) {
 
 // validateProductFields - 商品フィールドのバリデーション
 func (u *AdminProductUsecase) validateProductFields(name, nameJa, description, descriptionJa, imageURL string, affiliateURL, amazonURL, rakutenURL, yahooURL *string) error {
-	if _, err := product.NewProductName(name); err != nil {
+	if _, err := product.NewProductNameEn(name); err != nil {
 		return fmt.Errorf("name: %w", err)
 	}
-	if _, err := product.NewProductName(nameJa); err != nil {
+	if _, err := product.NewProductNameJa(nameJa); err != nil {
 		return fmt.Errorf("nameJa: %w", err)
 	}
-	if _, err := product.NewProductDescription(description); err != nil {
+	if _, err := product.NewProductDescriptionEn(description); err != nil {
 		return fmt.Errorf("description: %w", err)
 	}
-	if _, err := product.NewProductDescription(descriptionJa); err != nil {
+	if _, err := product.NewProductDescriptionJa(descriptionJa); err != nil {
 		return fmt.Errorf("descriptionJa: %w", err)
 	}
 	if _, err := product.NewImageURL(imageURL); err != nil {

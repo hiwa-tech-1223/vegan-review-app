@@ -31,6 +31,30 @@ func NewProductDescription(value string) (ProductDescription, error) {
 	return ProductDescription(trimmed), nil
 }
 
+// NewProductDescriptionEn - 英語の ProductDescription を生成（言語チェック付き）
+func NewProductDescriptionEn(value string) (ProductDescription, error) {
+	desc, err := NewProductDescription(value)
+	if err != nil {
+		return "", err
+	}
+	if err := ValidateEnglish(string(desc)); err != nil {
+		return "", err
+	}
+	return desc, nil
+}
+
+// NewProductDescriptionJa - 日本語の ProductDescription を生成（言語チェック付き）
+func NewProductDescriptionJa(value string) (ProductDescription, error) {
+	desc, err := NewProductDescription(value)
+	if err != nil {
+		return "", err
+	}
+	if err := ValidateJapanese(string(desc)); err != nil {
+		return "", err
+	}
+	return desc, nil
+}
+
 // String - string値を取得
 func (d ProductDescription) String() string {
 	return string(d)

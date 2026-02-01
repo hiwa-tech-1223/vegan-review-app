@@ -56,6 +56,15 @@ func (m *mockCategoryRepository) FindByID(id int64) (*product.Category, error) {
 	}
 	return &product.Category{ID: id, Name: "Test"}, nil
 }
+func (m *mockCategoryRepository) Create(category *product.Category) error {
+	return nil
+}
+func (m *mockCategoryRepository) Update(category *product.Category) error {
+	return nil
+}
+func (m *mockCategoryRepository) Delete(id int64) error {
+	return nil
+}
 
 func validCreateInput() CreateProductInput {
 	return CreateProductInput{
@@ -92,6 +101,66 @@ func TestCreateProduct_EmptyName(t *testing.T) {
 	}
 	if !errors.Is(err, product.ErrProductNameEmpty) {
 		t.Errorf("expected ErrProductNameEmpty, got %v", err)
+	}
+}
+
+func TestCreateProduct_NameNoEnglish(t *testing.T) {
+	uc := NewAdminProductUsecase(&mockProductRepository{}, &mockCategoryRepository{})
+
+	input := validCreateInput()
+	input.Name = "テスト商品"
+
+	_, err := uc.CreateProduct(input)
+	if err == nil {
+		t.Fatal("expected error for name without English")
+	}
+	if !errors.Is(err, product.ErrMustContainEnglish) {
+		t.Errorf("expected ErrMustContainEnglish, got %v", err)
+	}
+}
+
+func TestCreateProduct_NameJaNoJapanese(t *testing.T) {
+	uc := NewAdminProductUsecase(&mockProductRepository{}, &mockCategoryRepository{})
+
+	input := validCreateInput()
+	input.NameJa = "Test Product"
+
+	_, err := uc.CreateProduct(input)
+	if err == nil {
+		t.Fatal("expected error for nameJa without Japanese")
+	}
+	if !errors.Is(err, product.ErrMustContainJapanese) {
+		t.Errorf("expected ErrMustContainJapanese, got %v", err)
+	}
+}
+
+func TestCreateProduct_DescriptionNoEnglish(t *testing.T) {
+	uc := NewAdminProductUsecase(&mockProductRepository{}, &mockCategoryRepository{})
+
+	input := validCreateInput()
+	input.Description = "テスト説明文です"
+
+	_, err := uc.CreateProduct(input)
+	if err == nil {
+		t.Fatal("expected error for description without English")
+	}
+	if !errors.Is(err, product.ErrMustContainEnglish) {
+		t.Errorf("expected ErrMustContainEnglish, got %v", err)
+	}
+}
+
+func TestCreateProduct_DescriptionJaNoJapanese(t *testing.T) {
+	uc := NewAdminProductUsecase(&mockProductRepository{}, &mockCategoryRepository{})
+
+	input := validCreateInput()
+	input.DescriptionJa = "Test description"
+
+	_, err := uc.CreateProduct(input)
+	if err == nil {
+		t.Fatal("expected error for descriptionJa without Japanese")
+	}
+	if !errors.Is(err, product.ErrMustContainJapanese) {
+		t.Errorf("expected ErrMustContainJapanese, got %v", err)
 	}
 }
 
