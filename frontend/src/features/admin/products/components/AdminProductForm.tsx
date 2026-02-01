@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { Admin } from '../../../auth/types';
@@ -62,10 +62,14 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
   const { token } = useAuth();
   const isEditMode = !!id;
 
+  // --- State ---
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [kantanLinkHtml, setKantanLinkHtml] = useState('');
+  const [extractMessage, setExtractMessage] = useState<OperationMessage | null>(null);
 
   const [formData, setFormData] = useState<ProductFormData>({
     nameJa: '',
@@ -79,19 +83,7 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
     yahooUrl: ''
   });
 
-  const toggleCategory = (categoryId: number) => {
-    setFormData(prev => ({
-      ...prev,
-      categoryIds: prev.categoryIds.includes(categoryId)
-        ? prev.categoryIds.filter(id => id !== categoryId)
-        : [...prev.categoryIds, categoryId]
-    }));
-  };
-
-  const [kantanLinkHtml, setKantanLinkHtml] = useState('');
-  const [extractMessage, setExtractMessage] = useState<OperationMessage | null>(null);
-
-  // 初期データ取得
+  // --- useEffect ---
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -127,6 +119,36 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
     };
     fetchData();
   }, [id, isEditMode]);
+
+  // --- ハンドラー ---
+
+  // フィールド変更時にエラーをクリアしつつ値を更新
+  const handleFieldChange = (field: keyof ProductFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  const toggleCategory = (categoryId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      categoryIds: prev.categoryIds.includes(categoryId)
+        ? prev.categoryIds.filter(id => id !== categoryId)
+        : [...prev.categoryIds, categoryId]
+    }));
+    if (validationErrors.categoryIds) {
+      setValidationErrors(prev => {
+        const next = { ...prev };
+        delete next.categoryIds;
+        return next;
+      });
+    }
+  };
 
   // かんたんリンクHTMLからURLを抽出
   const handleExtractUrls = () => {
@@ -171,8 +193,143 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
     }
   };
 
+  // --- バリデーション ---
+
+  // 単一フィールドのバリデーション（onBlur用）
+  const validateField = useCallback((field: string): string | null => {
+    const urlPattern = /^https?:\/\/.+/;
+    switch (field) {
+      case 'nameJa': {
+        const v = formData.nameJa.trim();
+        if (!v) return '製品名（日本語）を入力してください';
+        if (v.length > 255) return `255文字以内にしてください（現在${v.length}文字）`;
+        if (!/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(v)) return '日本語を1文字以上含めてください';
+        return null;
+      }
+      case 'name': {
+        const v = formData.name.trim();
+        if (!v) return '製品名（英語）を入力してください';
+        if (v.length > 255) return `255文字以内にしてください（現在${v.length}文字）`;
+        if (!/[a-zA-Z]/.test(v)) return '英語を1文字以上含めてください';
+        return null;
+      }
+      case 'descriptionJa': {
+        const v = formData.descriptionJa.trim();
+        if (!v) return '説明（日本語）を入力してください';
+        if (v.length > 5000) return `5000文字以内にしてください（現在${v.length}文字）`;
+        if (!/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(v)) return '日本語を1文字以上含めてください';
+        return null;
+      }
+      case 'description': {
+        const v = formData.description.trim();
+        if (!v) return '説明（英語）を入力してください';
+        if (v.length > 5000) return `5000文字以内にしてください（現在${v.length}文字）`;
+        if (!/[a-zA-Z]/.test(v)) return '英語を1文字以上含めてください';
+        return null;
+      }
+      case 'imageUrl': {
+        const v = formData.imageUrl.trim();
+        if (!v) return '画像URLを入力してください';
+        if (!urlPattern.test(v)) return 'URLの形式が正しくありません';
+        return null;
+      }
+      case 'amazonUrl': {
+        const v = formData.amazonUrl;
+        if (v && !urlPattern.test(v)) return 'URLの形式が正しくありません';
+        return null;
+      }
+      case 'rakutenUrl': {
+        const v = formData.rakutenUrl;
+        if (v && !urlPattern.test(v)) return 'URLの形式が正しくありません';
+        return null;
+      }
+      case 'yahooUrl': {
+        const v = formData.yahooUrl;
+        if (v && !urlPattern.test(v)) return 'URLの形式が正しくありません';
+        return null;
+      }
+      default:
+        return null;
+    }
+  }, [formData]);
+
+  // onBlur ハンドラー
+  const handleBlur = (field: string) => {
+    const error = validateField(field);
+    if (error) {
+      setValidationErrors(prev => ({ ...prev, [field]: error }));
+    } else {
+      setValidationErrors(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  // 全フィールドのバリデーション（submit用）
+  const validateProduct = (): Record<string, string> => {
+    const fieldErrors: Record<string, string> = {};
+    const name = formData.name.trim();
+    const nameJa = formData.nameJa.trim();
+    const description = formData.description.trim();
+    const descriptionJa = formData.descriptionJa.trim();
+    const imageUrl = formData.imageUrl.trim();
+    const urlPattern = /^https?:\/\/.+/;
+
+    if (!nameJa) {
+      fieldErrors.nameJa = '製品名（日本語）を入力してください';
+    } else if (nameJa.length > 255) {
+      fieldErrors.nameJa = `255文字以内にしてください（現在${nameJa.length}文字）`;
+    } else if (!/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(nameJa)) {
+      fieldErrors.nameJa = '日本語を1文字以上含めてください';
+    }
+    if (!name) {
+      fieldErrors.name = '製品名（英語）を入力してください';
+    } else if (name.length > 255) {
+      fieldErrors.name = `255文字以内にしてください（現在${name.length}文字）`;
+    } else if (!/[a-zA-Z]/.test(name)) {
+      fieldErrors.name = '英語を1文字以上含めてください';
+    }
+    if (formData.categoryIds.length === 0) {
+      fieldErrors.categoryIds = '少なくとも1つのカテゴリーを選択してください';
+    }
+    if (!descriptionJa) {
+      fieldErrors.descriptionJa = '説明（日本語）を入力してください';
+    } else if (descriptionJa.length > 5000) {
+      fieldErrors.descriptionJa = `5000文字以内にしてください（現在${descriptionJa.length}文字）`;
+    } else if (!/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(descriptionJa)) {
+      fieldErrors.descriptionJa = '日本語を1文字以上含めてください';
+    }
+    if (!description) {
+      fieldErrors.description = '説明（英語）を入力してください';
+    } else if (description.length > 5000) {
+      fieldErrors.description = `5000文字以内にしてください（現在${description.length}文字）`;
+    } else if (!/[a-zA-Z]/.test(description)) {
+      fieldErrors.description = '英語を1文字以上含めてください';
+    }
+    if (!imageUrl) {
+      fieldErrors.imageUrl = '画像URLを入力してください';
+    } else if (!urlPattern.test(imageUrl)) {
+      fieldErrors.imageUrl = 'URLの形式が正しくありません';
+    }
+    if (formData.amazonUrl && !urlPattern.test(formData.amazonUrl)) {
+      fieldErrors.amazonUrl = 'URLの形式が正しくありません';
+    }
+    if (formData.rakutenUrl && !urlPattern.test(formData.rakutenUrl)) {
+      fieldErrors.rakutenUrl = 'URLの形式が正しくありません';
+    }
+    if (formData.yahooUrl && !urlPattern.test(formData.yahooUrl)) {
+      fieldErrors.yahooUrl = 'URLの形式が正しくありません';
+    }
+
+    return fieldErrors;
+  };
+
+  // --- Submit ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors({});
     setError(null);
 
     if (!token) {
@@ -180,8 +337,15 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
       return;
     }
 
-    if (formData.categoryIds.length === 0) {
-      setError('少なくとも1つのカテゴリーを選択してください');
+    const fieldErrors = validateProduct();
+    if (Object.keys(fieldErrors).length > 0) {
+      setValidationErrors(fieldErrors);
+      // 最初のエラーフィールドまでスクロール
+      const firstErrorField = Object.keys(fieldErrors)[0];
+      const el = document.getElementById(`field-${firstErrorField}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
@@ -215,6 +379,8 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
     }
   };
 
+  // --- JSX ---
+
   // ローディング表示
   if (isLoading) {
     return (
@@ -242,47 +408,55 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} noValidate className="space-y-8">
           {/* 基本情報セクション */}
           <div className="bg-white rounded-lg shadow-sm p-8">
             <h2 className="text-lg font-medium text-gray-900 mb-6">製品情報 / Product Information</h2>
             <div className="space-y-6">
               {/* Product Name (JA) */}
-              <div>
+              <div id="field-nameJa">
                 <label className="block text-sm text-gray-700 mb-2">
                   Product Name (Japanese) / 製品名（日本語）
                 </label>
                 <input
                   type="text"
-                  required
                   value={formData.nameJa}
-                  onChange={(e) => setFormData({ ...formData, nameJa: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('nameJa', e.target.value)}
+                  onBlur={() => handleBlur('nameJa')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.nameJa ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="ビヨンドバーガー"
                 />
+                <div className="flex justify-between mt-1">
+                  {validationErrors.nameJa ? <p className="text-sm text-red-600">{validationErrors.nameJa}</p> : <span />}
+                  <span className={`text-xs ${formData.nameJa.length > 255 ? 'text-red-600' : 'text-gray-400'}`}>{formData.nameJa.length}/255</span>
+                </div>
               </div>
 
               {/* Product Name (EN) */}
-              <div>
+              <div id="field-name">
                 <label className="block text-sm text-gray-700 mb-2">
                   Product Name (English) / 製品名（英語）
                 </label>
                 <input
                   type="text"
-                  required
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  onBlur={() => handleBlur('name')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.name ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="Beyond Burger"
                 />
+                <div className="flex justify-between mt-1">
+                  {validationErrors.name ? <p className="text-sm text-red-600">{validationErrors.name}</p> : <span />}
+                  <span className={`text-xs ${formData.name.length > 255 ? 'text-red-600' : 'text-gray-400'}`}>{formData.name.length}/255</span>
+                </div>
               </div>
 
               {/* Category */}
-              <div>
+              <div id="field-categoryIds">
                 <label className="block text-sm text-gray-700 mb-2">
                   Categories / カテゴリー（複数選択可）
                 </label>
-                <div className="border border-gray-300 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+                <div className={`border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto ${validationErrors.categoryIds ? 'border-red-300' : 'border-gray-300'}`}>
                   {categories.map(category => (
                     <label key={category.id} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
                       <input
@@ -297,39 +471,45 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
                     </label>
                   ))}
                 </div>
-                {formData.categoryIds.length === 0 && (
-                  <p className="text-sm text-red-500 mt-1">少なくとも1つのカテゴリーを選択してください</p>
-                )}
+                {validationErrors.categoryIds && <p className="text-sm text-red-600 mt-1">{validationErrors.categoryIds}</p>}
               </div>
 
               {/* Description (JA) */}
-              <div>
+              <div id="field-descriptionJa">
                 <label className="block text-sm text-gray-700 mb-2">
                   Description (Japanese) / 説明（日本語）
                 </label>
                 <textarea
-                  required
                   value={formData.descriptionJa}
-                  onChange={(e) => setFormData({ ...formData, descriptionJa: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('descriptionJa', e.target.value)}
+                  onBlur={() => handleBlur('descriptionJa')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.descriptionJa ? 'border-red-300' : 'border-gray-300'}`}
                   rows={4}
                   placeholder="製品の説明を日本語で入力してください..."
                 />
+                <div className="flex justify-between mt-1">
+                  {validationErrors.descriptionJa ? <p className="text-sm text-red-600">{validationErrors.descriptionJa}</p> : <span />}
+                  <span className={`text-xs ${formData.descriptionJa.length > 5000 ? 'text-red-600' : 'text-gray-400'}`}>{formData.descriptionJa.length}/5000</span>
+                </div>
               </div>
 
               {/* Description (EN) */}
-              <div>
+              <div id="field-description">
                 <label className="block text-sm text-gray-700 mb-2">
                   Description (English) / 説明（英語）
                 </label>
                 <textarea
-                  required
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('description', e.target.value)}
+                  onBlur={() => handleBlur('description')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.description ? 'border-red-300' : 'border-gray-300'}`}
                   rows={4}
                   placeholder="Enter product description in English..."
                 />
+                <div className="flex justify-between mt-1">
+                  {validationErrors.description ? <p className="text-sm text-red-600">{validationErrors.description}</p> : <span />}
+                  <span className={`text-xs ${formData.description.length > 5000 ? 'text-red-600' : 'text-gray-400'}`}>{formData.description.length}/5000</span>
+                </div>
               </div>
             </div>
           </div>
@@ -390,18 +570,19 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
             <hr className="my-6" />
 
             {/* 画像URL */}
-            <div className="mb-6">
+            <div id="field-imageUrl" className="mb-6">
               <label className="block text-sm text-gray-700 mb-2">
                 Image URL / 画像URL
               </label>
               <input
-                type="url"
-                required
+                type="text"
                 value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                onChange={(e) => handleFieldChange('imageUrl', e.target.value)}
+                onBlur={() => handleBlur('imageUrl')}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.imageUrl ? 'border-red-300' : 'border-gray-300'}`}
                 placeholder="https://example.com/image.jpg"
               />
+              {validationErrors.imageUrl && <p className="text-sm text-red-600 mt-1">{validationErrors.imageUrl}</p>}
               {formData.imageUrl && (
                 <div className="mt-3">
                   <p className="text-sm text-gray-500 mb-2">Preview:</p>
@@ -422,48 +603,54 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
               <h3 className="text-sm font-medium text-gray-700">アフィリエイトリンク</h3>
 
               {/* Amazon */}
-              <div>
+              <div id="field-amazonUrl">
                 <label className="block text-sm text-gray-600 mb-1">
                   <span className="inline-block w-4 h-4 rounded mr-2" style={{ backgroundColor: '#FF9900' }}></span>
                   Amazon URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={formData.amazonUrl}
-                  onChange={(e) => setFormData({ ...formData, amazonUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('amazonUrl', e.target.value)}
+                  onBlur={() => handleBlur('amazonUrl')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.amazonUrl ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="https://af.moshimo.com/..."
                 />
+                {validationErrors.amazonUrl && <p className="text-sm text-red-600 mt-1">{validationErrors.amazonUrl}</p>}
               </div>
 
               {/* 楽天 */}
-              <div>
+              <div id="field-rakutenUrl">
                 <label className="block text-sm text-gray-600 mb-1">
                   <span className="inline-block w-4 h-4 rounded mr-2" style={{ backgroundColor: '#BF0000' }}></span>
                   楽天市場 URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={formData.rakutenUrl}
-                  onChange={(e) => setFormData({ ...formData, rakutenUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('rakutenUrl', e.target.value)}
+                  onBlur={() => handleBlur('rakutenUrl')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.rakutenUrl ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="https://af.moshimo.com/..."
                 />
+                {validationErrors.rakutenUrl && <p className="text-sm text-red-600 mt-1">{validationErrors.rakutenUrl}</p>}
               </div>
 
               {/* Yahoo */}
-              <div>
+              <div id="field-yahooUrl">
                 <label className="block text-sm text-gray-600 mb-1">
                   <span className="inline-block w-4 h-4 rounded mr-2" style={{ backgroundColor: '#FF0033' }}></span>
                   Yahoo!ショッピング URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={formData.yahooUrl}
-                  onChange={(e) => setFormData({ ...formData, yahooUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#4A7C59]"
+                  onChange={(e) => handleFieldChange('yahooUrl', e.target.value)}
+                  onBlur={() => handleBlur('yahooUrl')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-[#4A7C59] ${validationErrors.yahooUrl ? 'border-red-300' : 'border-gray-300'}`}
                   placeholder="https://af.moshimo.com/..."
                 />
+                {validationErrors.yahooUrl && <p className="text-sm text-red-600 mt-1">{validationErrors.yahooUrl}</p>}
               </div>
             </div>
           </div>
