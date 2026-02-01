@@ -2,11 +2,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router';
 import { useState } from 'react';
 
 // Feature imports
-import { AuthProvider, useAuth } from './features/auth';
-import { Review } from './features/customer/reviews/types';
-import { ProductListing, ProductDetail } from './features/customer/products';
-import { CustomerLogin, AuthCallback } from './features/auth';
-import { MyPage } from './features/customer/users';
+import { AuthProvider, useAuth } from './pages/auth';
+import { Review } from './api/customer/reviewTypes';
+import { ProductList, ProductDetail } from './pages/customer/products';
+import { CustomerLogin, AuthCallback } from './pages/auth';
+import { MyPage } from './pages/customer/users';
 import {
   AdminLogin,
   AdminAuthCallback,
@@ -16,7 +16,7 @@ import {
   AdminCategoryForm,
   AdminReviewManagement,
   AdminCustomerManagement,
-} from './features/admin';
+} from './pages/admin';
 
 // Common components
 import { Terms } from './components/Terms';
@@ -67,7 +67,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public Customer Routes */}
-      <Route path="/" element={<ProductListing customer={customer} />} />
+      <Route path="/" element={<ProductList customer={customer} />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/login" element={<CustomerLogin />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
