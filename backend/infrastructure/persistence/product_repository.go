@@ -98,3 +98,15 @@ func (r *categoryRepository) FindByID(id int64) (*product.Category, error) {
 	}
 	return &category, nil
 }
+
+func (r *categoryRepository) Create(category *product.Category) error {
+	return r.db.Create(category).Error
+}
+
+func (r *categoryRepository) Update(category *product.Category) error {
+	return r.db.Save(category).Error
+}
+
+func (r *categoryRepository) Delete(id int64) error {
+	return r.db.Delete(&product.Category{}, "id = ?", id).Error
+}

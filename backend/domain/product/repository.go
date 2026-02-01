@@ -14,4 +14,7 @@ type ProductRepository interface {
 type CategoryRepository interface {
 	FindAll() ([]Category, error)
 	FindByID(id int64) (*Category, error)
+	Create(category *Category) error
+	Update(category *Category) error
+	Delete(id int64) error
 }

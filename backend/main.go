@@ -51,12 +51,14 @@ func main() {
 	authUsecase := usecase.NewAuthUsecase(customerRepo, adminRepo)
 	favoriteUsecase := usecase.NewFavoriteUsecase(favoriteRepo)
 	adminProductUsecase := adminusecase.NewAdminProductUsecase(productRepo, categoryRepo)
+	adminCategoryUsecase := adminusecase.NewAdminCategoryUsecase(categoryRepo)
 	customerProductUsecase := customerusecase.NewProductUsecase(productRepo, categoryRepo)
 	customerReviewUsecase := customerusecase.NewReviewUsecase(reviewRepo, productRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(authUsecase, oauthService, jwtService, cfg.FrontendURL)
 	adminProductHandler := adminhandler.NewAdminProductHandler(adminProductUsecase)
+	adminCategoryHandler := adminhandler.NewAdminCategoryHandler(adminCategoryUsecase)
 	customerProductHandler := customerhandler.NewProductHandler(customerProductUsecase)
 	customerReviewHandler := customerhandler.NewReviewHandler(customerReviewUsecase)
 	customerFavoriteHandler := customerhandler.NewFavoriteHandler(favoriteUsecase)
@@ -105,6 +107,11 @@ func main() {
 	authGroup.POST("/products", adminProductHandler.CreateProduct)
 	authGroup.PUT("/products/:id", adminProductHandler.UpdateProduct)
 	authGroup.DELETE("/products/:id", adminProductHandler.DeleteProduct)
+
+	// Category routes (protected write - admin)
+	authGroup.POST("/categories", adminCategoryHandler.CreateCategory)
+	authGroup.PUT("/categories/:id", adminCategoryHandler.UpdateCategory)
+	authGroup.DELETE("/categories/:id", adminCategoryHandler.DeleteCategory)
 
 	// Review routes (protected write)
 	authGroup.POST("/products/:id/reviews", customerReviewHandler.CreateReview)

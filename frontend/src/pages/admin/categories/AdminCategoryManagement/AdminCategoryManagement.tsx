@@ -4,17 +4,21 @@ import { Plus, Search, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { Admin } from '../../../../api/auth/authTypes';
 import { AdminHeader } from '../../common/AdminHeader/AdminHeader';
 import { productApi } from '../../../../api/customer/productApi';
+import { categoryApi } from '../../../../api/admin/categoryApi';
 import { Category } from '../../../../api/customer/productTypes';
+import { useAuth } from '../../../auth';
 
 interface AdminCategoryManagementProps {
   admin: Admin;
 }
 
 export function AdminCategoryManagement({ admin }: AdminCategoryManagementProps) {
+  const { token } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -37,11 +41,19 @@ export function AdminCategoryManagement({ admin }: AdminCategoryManagementProps)
     return matchesSearch;
   });
 
-  const handleDeleteCategory = (id: number) => {
+  const handleDeleteCategory = async (id: number) => {
     if (confirm('このカテゴリーを削除しますか？このカテゴリーの商品は未分類になります。\n\nAre you sure you want to delete this category? Products in this category will become uncategorized.')) {
-      // TODO: API連携時に実装
-      setCategories(categories.filter(c => c.id !== id));
-      setSelectedCategories(selectedCategories.filter(cId => cId !== id));
+      setIsDeleting(true);
+      try {
+        await categoryApi.deleteCategory(id, token!);
+        setCategories(categories.filter(c => c.id !== id));
+        setSelectedCategories(selectedCategories.filter(cId => cId !== id));
+      } catch (error) {
+        console.error('Failed to delete category:', error);
+        alert('カテゴリーの削除に失敗しました / Failed to delete category');
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -61,11 +73,22 @@ export function AdminCategoryManagement({ admin }: AdminCategoryManagementProps)
     }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedCategories.length === 0) return;
     if (confirm(`${selectedCategories.length}件のカテゴリーを削除しますか？これらのカテゴリーの商品は未分類になります。\n\nAre you sure you want to delete ${selectedCategories.length} category(ies)? Products in these categories will become uncategorized.`)) {
-      setCategories(categories.filter(c => !selectedCategories.includes(c.id)));
-      setSelectedCategories([]);
+      setIsDeleting(true);
+      try {
+        await Promise.all(
+          selectedCategories.map(id => categoryApi.deleteCategory(id, token!))
+        );
+        setCategories(categories.filter(c => !selectedCategories.includes(c.id)));
+        setSelectedCategories([]);
+      } catch (error) {
+        console.error('Failed to delete categories:', error);
+        alert('カテゴリーの削除に失敗しました / Failed to delete categories');
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -94,7 +117,7 @@ export function AdminCategoryManagement({ admin }: AdminCategoryManagementProps)
                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all"
                 style={{ backgroundColor: '#dc2626', color: 'white' }}
               >
-                <Trash2 className="w-4 h-4" />
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 Delete Selected ({selectedCategories.length})
               </button>
             )}
