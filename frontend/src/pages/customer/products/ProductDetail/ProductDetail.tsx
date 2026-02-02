@@ -31,6 +31,7 @@ export function ProductDetail() {
   const [comment, setComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // 編集モード（既存レビューがある場合）
   const [existingCustomerReview, setExistingCustomerReview] = useState<ApiReview | null>(null);
@@ -102,22 +103,21 @@ export function ProductDetail() {
   }, [customer, token, id]);
 
   // レビューのバリデーション
-  const validateReview = (): string | null => {
+  const validateReview = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
     const trimmedComment = comment.trim();
 
     if (rating < 1 || rating > 5) {
-      return 'Rating must be between 1 and 5 / 評価は1〜5の間で選択してください';
+      errors.rating = 'Rating must be between 1 and 5 / 評価は1〜5の間で選択してください';
     }
     if (!trimmedComment) {
-      return 'Comment is required / コメントを入力してください';
+      errors.comment = 'Comment is required / コメントを入力してください';
+    } else if (trimmedComment.length < 10) {
+      errors.comment = `Comment must be at least 10 characters (currently ${trimmedComment.length}) / コメントは10文字以上必要です（現在${trimmedComment.length}文字）`;
+    } else if (trimmedComment.length > 1000) {
+      errors.comment = `Comment must be at most 1000 characters (currently ${trimmedComment.length}) / コメントは1000文字以内にしてください（現在${trimmedComment.length}文字）`;
     }
-    if (trimmedComment.length < 10) {
-      return `Comment must be at least 10 characters (currently ${trimmedComment.length}) / コメントは10文字以上必要です（現在${trimmedComment.length}文字）`;
-    }
-    if (trimmedComment.length > 1000) {
-      return `Comment must be at most 1000 characters (currently ${trimmedComment.length}) / コメントは1000文字以内にしてください（現在${trimmedComment.length}文字）`;
-    }
-    return null;
+    return errors;
   };
 
   // レビュー投稿/更新
@@ -130,14 +130,15 @@ export function ProductDetail() {
     if (!id) return;
 
     // フロントエンドバリデーション
-    const validationError = validateReview();
-    if (validationError) {
-      setReviewError(validationError);
+    const errors = validateReview();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
 
     setIsSubmittingReview(true);
     setReviewError(null);
+    setValidationErrors({});
     try {
       let updatedReview: ApiReview;
 
@@ -431,7 +432,7 @@ export function ProductDetail() {
               {reviewError}
             </div>
           )}
-          <form onSubmit={handleSubmitReview}>
+          <form onSubmit={handleSubmitReview} noValidate>
             <div className="mb-4">
               <label className="block mb-2" style={{ color: 'var(--text)' }}>
                 Rating / 評価
@@ -441,7 +442,7 @@ export function ProductDetail() {
                   <button
                     key={star}
                     type="button"
-                    onClick={() => setRating(star)}
+                    onClick={() => { setRating(star); setValidationErrors(prev => { const { rating: _, ...rest } = prev; return rest; }); }}
                     className="text-3xl"
                     style={{ color: star <= rating ? 'var(--accent)' : '#ddd' }}
                   >
@@ -449,6 +450,7 @@ export function ProductDetail() {
                   </button>
                 ))}
               </div>
+              {validationErrors.rating && <p className="text-sm text-red-600 mt-1">{validationErrors.rating}</p>}
             </div>
             <div className="mb-4">
               <label className="block mb-2" style={{ color: 'var(--text)' }}>
@@ -456,20 +458,21 @@ export function ProductDetail() {
               </label>
               <textarea
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[var(--primary)]"
+                onChange={(e) => { setComment(e.target.value); setValidationErrors(prev => { const { comment: _, ...rest } = prev; return rest; }); }}
+                className={`w-full p-3 border rounded-xl focus:outline-none ${validationErrors.comment ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-[var(--primary)]'}`}
                 rows={4}
                 placeholder="Share your experience... / あなたの体験をシェア..."
                 minLength={10}
                 maxLength={1000}
               />
-              <p className={`text-sm mt-1 ${comment.trim().length < 10 ? 'text-red-500' : 'text-gray-500'}`}>
-                {comment.trim().length} / 1000 {comment.trim().length < 10 && `(${10 - comment.trim().length} more needed / あと${10 - comment.trim().length}文字)`}
-              </p>
+              <div className="flex justify-between mt-1">
+                {validationErrors.comment ? <p className="text-sm text-red-600">{validationErrors.comment}</p> : <span />}
+                <span className={`text-xs ${comment.trim().length > 1000 ? 'text-red-600' : 'text-gray-400'}`}>{comment.trim().length}/1000</span>
+              </div>
             </div>
             <button
               type="submit"
-              disabled={isSubmittingReview || comment.trim().length < 10}
+              disabled={isSubmittingReview}
               className="px-6 py-3 rounded-full text-white disabled:opacity-50"
               style={{ backgroundColor: 'var(--primary)' }}
             >
