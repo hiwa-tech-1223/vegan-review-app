@@ -540,8 +540,8 @@ export function AdminProductForm({ admin }: AdminProductFormProps) {
             <button
               type="button"
               onClick={handleExtractUrls}
-              className="px-4 py-2 rounded-lg transition-all mb-4"
-              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+              className="px-4 py-2 rounded-lg transition-all mb-4 border border-gray-300 hover:bg-gray-100"
+              style={{ backgroundColor: 'white', color: 'var(--text)' }}
             >
               🔍 URLを自動抽出
             </button>
