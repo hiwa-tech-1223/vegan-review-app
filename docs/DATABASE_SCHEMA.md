@@ -3,13 +3,16 @@
 ## 現在のテーブル構成
 
 ```
-admins          - 管理者
-users           - 一般ユーザー
-categories      - カテゴリ
-products        - 商品
-reviews         - レビュー
-favorites       - お気に入り
+admins              - 管理者
+users               - 一般ユーザー
+categories          - カテゴリ
+products            - 商品
+product_categories  - 商品-カテゴリ中間テーブル（多対多）
+reviews             - レビュー
+favorites           - お気に入り
 ```
+
+> **Note:** 現在のDBはレビューサイトとしての機能のみを持ち、EC用のカラム（price, stock_quantity等）は含まれていません。EC機能は必要になった時点で追加します（YAGNI原則）。
 
 ---
 
@@ -250,13 +253,13 @@ CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 ### EC機能追加時に必要な作業
 
+- [ ] products テーブルに price, stock_quantity, is_available カラムを追加
+- [ ] users テーブルに phone カラムを追加
 - [ ] addresses テーブル作成
 - [ ] carts テーブル作成
 - [ ] cart_items テーブル作成
 - [ ] orders テーブル作成
 - [ ] order_items テーブル作成
-- [ ] users.phone を必須に変更（必要に応じて）
-- [ ] products.price, stock_quantity を必須に変更
 - [ ] バックエンドにモデル追加
 - [ ] API エンドポイント追加
 - [ ] フロントエンドにカート/注文画面追加

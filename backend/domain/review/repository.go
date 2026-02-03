@@ -1,0 +1,14 @@
+package review
+
+// ReviewRepository - レビューリポジトリインターフェース
+type ReviewRepository interface {
+	FindAll() ([]Review, error)
+	FindByProductID(productID int64) ([]Review, error)
+	FindByCustomerID(customerID int64) ([]Review, error)
+	FindByID(id int64) (*Review, error)
+	FindByProductIDAndCustomerID(productID, customerID int64) (*Review, error)
+	Create(review *Review) error
+	Update(review *Review) error
+	Delete(id int64) error
+	GetProductRatingStats(productID int64) (avg float64, count int64, err error)
+}

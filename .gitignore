@@ -30,3 +30,6 @@ npm-debug.log*
 *.dll
 *.so
 *.dylib
+
+# playwright
+.playwright-mcp/

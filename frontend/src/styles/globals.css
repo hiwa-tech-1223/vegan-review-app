@@ -6,6 +6,10 @@
   --card: #FFFFFF;
   --text: #333333;
   --accent: #E07B53;
+  /* Affiliate store colors */
+  --amazon: #FF9900;
+  --rakuten: #BF0000;
+  --yahoo: #FF0033;
 }
 
 body {
