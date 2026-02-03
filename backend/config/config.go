@@ -10,6 +10,7 @@ type Config struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
+	DBSSLMode  string
 
 	// OAuth
 	GoogleClientID     string
@@ -32,6 +33,7 @@ func Load() *Config {
 		DBUser:     getEnv("DB_USER", "postgres"),
 		DBPassword: getEnv("DB_PASSWORD", "postgres"),
 		DBName:     getEnv("DB_NAME", "veganbite"),
+		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
 
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
@@ -50,7 +52,7 @@ func (c *Config) GetDSN() string {
 		" password=" + c.DBPassword +
 		" dbname=" + c.DBName +
 		" port=" + c.DBPort +
-		" sslmode=disable"
+		" sslmode=" + c.DBSSLMode
 }
 
 func getEnv(key, defaultValue string) string {
