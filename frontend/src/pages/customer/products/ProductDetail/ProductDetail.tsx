@@ -406,10 +406,10 @@ export function ProductDetail() {
             <h2 className="text-xl mb-3" style={{ color: 'var(--text)' }}>
               Description / 説明
             </h2>
-            <p className="mb-2" style={{ color: 'var(--text)' }}>
+            <p className="mb-2" style={{ color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
               {product.description}
             </p>
-            <p style={{ color: 'var(--text)' }}>
+            <p style={{ color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
               {product.descriptionJa}
             </p>
           </div>
