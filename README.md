@@ -2,6 +2,15 @@
 
 A bilingual (Japanese/English) vegan food review platform built with React, Go, and PostgreSQL.
 
+## 🌐 Live Site
+
+- **サイト**: https://veganbite.onrender.com/
+- **管理画面**: https://veganbite.onrender.com/admin
+
+## 📈 Roadmap
+
+- [ ] アフィリエイトリンクの導入
+
 ## Tech Stack
 
 ### Frontend
