@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { Leaf } from 'lucide-react';
+import { Footer } from './common/Footer';
 
 export function Privacy() {
   return (
@@ -194,10 +195,31 @@ export function Privacy() {
               </div>
             </section>
 
-            {/* Section 9 */}
+            {/* Section 9 - Affiliate */}
             <section>
               <h2 className="text-2xl mb-4" style={{ color: 'var(--text)' }}>
-                9. Changes to This Policy / ポリシーの変更
+                9. Affiliate Advertising / アフィリエイト広告
+              </h2>
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  This site participates in affiliate advertising programs, including the Amazon Associates Program. As an Amazon Associate, we earn from qualifying purchases.
+                </p>
+                <p>
+                  本サイトはアフィリエイト広告（Amazonアソシエイト含む）を掲載しています。Amazonのアソシエイトとして、当サイトは適格販売により収入を得ています。
+                </p>
+                <p>
+                  We may also participate in affiliate programs with Rakuten and Yahoo! Shopping.
+                </p>
+                <p>
+                  また、楽天市場およびYahoo!ショッピングのアフィリエイトプログラムにも参加しています。
+                </p>
+              </div>
+            </section>
+
+            {/* Section 10 */}
+            <section>
+              <h2 className="text-2xl mb-4" style={{ color: 'var(--text)' }}>
+                10. Changes to This Policy / ポリシーの変更
               </h2>
               <div className="space-y-4 text-gray-700">
                 <p>
@@ -209,10 +231,10 @@ export function Privacy() {
               </div>
             </section>
 
-            {/* Section 10 */}
+            {/* Section 11 */}
             <section>
               <h2 className="text-2xl mb-4" style={{ color: 'var(--text)' }}>
-                10. Contact Us / お問い合わせ
+                11. Contact Us / お問い合わせ
               </h2>
               <div className="space-y-4 text-gray-700">
                 <p>
@@ -231,25 +253,7 @@ export function Privacy() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white mt-16 border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Leaf className="w-6 h-6" style={{ color: 'var(--primary)' }} />
-              <span style={{ color: 'var(--primary)' }}>VeganBite</span>
-            </div>
-            <div className="flex gap-6 text-sm">
-              <Link to="/" className="hover:opacity-70" style={{ color: 'var(--text)' }}>Home / ホーム</Link>
-              <Link to="/terms" className="hover:opacity-70" style={{ color: 'var(--text)' }}>Terms / 利用規約</Link>
-              <Link to="/privacy" className="hover:opacity-70" style={{ color: 'var(--text)' }}>Privacy / プライバシー</Link>
-            </div>
-          </div>
-          <div className="text-center mt-4 text-sm" style={{ color: '#666' }}>
-            © 2025 VeganBite. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

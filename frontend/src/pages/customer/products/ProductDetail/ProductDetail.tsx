@@ -7,6 +7,7 @@ import { ApiProduct } from '../../../../api/customer/productTypes';
 import { reviewApi, ApiReview } from '../../reviews';
 import { customerApi } from '../../users';
 import { StarRating } from '../../../../components/StarRating';
+import { Footer } from '../../../../components/common/Footer';
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -528,28 +529,7 @@ export function ProductDetail() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white mt-16 border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Leaf className="w-6 h-6" style={{ color: 'var(--primary)' }} />
-              <span style={{ color: 'var(--primary)' }}>VeganBite</span>
-            </div>
-            <div className="flex gap-6 text-sm">
-              <Link to="/" className="hover:opacity-70" style={{ color: 'var(--text)' }}>Home / ホーム</Link>
-              <Link to="/terms" className="hover:opacity-70" style={{ color: 'var(--text)' }}>Terms / 利用規約</Link>
-              <Link to="/privacy" className="hover:opacity-70" style={{ color: 'var(--text)' }}>Privacy / プライバシー</Link>
-            </div>
-          </div>
-          <div className="text-center mt-4 text-xs" style={{ color: '#999' }}>
-            ※ 本サイトはアフィリエイトプログラムに参加しています
-          </div>
-          <div className="text-center mt-2 text-sm" style={{ color: '#666' }}>
-            © 2025 VeganBite. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer showAffiliateNotice />
     </div>
   );
 }
