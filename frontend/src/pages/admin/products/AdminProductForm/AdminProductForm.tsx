@@ -18,6 +18,37 @@ function parseKantanLinkHtml(html: string): ParsedKantanLink {
   const result: ParsedKantanLink = {};
 
   try {
+    // msmaflink JSON形式を抽出（もしもアフィリエイト）
+    const msmaflinkMatch = html.match(/msmaflink\((\{[\s\S]*?\})\);/);
+    if (msmaflinkMatch) {
+      const jsonStr = msmaflinkMatch[1];
+      const data = JSON.parse(jsonStr);
+
+      // 画像URLを構築: d + c_p + p[0]
+      if (data.d && data.c_p && data.p && data.p.length > 0) {
+        result.imageUrl = data.d + data.c_p + data.p[0];
+      }
+
+      // b_l配列からアフィリエイトリンクを抽出
+      if (data.b_l && Array.isArray(data.b_l)) {
+        data.b_l.forEach((link: { u_url?: string; s_n?: string }) => {
+          if (!link.u_url) return;
+
+          const serviceName = link.s_n || '';
+          if (serviceName === 'amazon' || link.u_url.includes('amazon') || link.u_url.includes('amzn')) {
+            result.amazonUrl = link.u_url;
+          } else if (serviceName === 'rakuten' || link.u_url.includes('rakuten')) {
+            result.rakutenUrl = link.u_url;
+          } else if (serviceName === 'yahoo' || link.u_url.includes('yahoo')) {
+            result.yahooUrl = link.u_url;
+          }
+        });
+      }
+
+      return result;
+    }
+
+    // 従来のHTML形式にフォールバック（img/aタグ）
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
