@@ -7,10 +7,6 @@ A bilingual (Japanese/English) vegan food review platform built with React, Go, 
 - **サイト**: https://veganbite.onrender.com/
 - **管理画面**: https://veganbite.onrender.com/admin
 
-## 📈 Roadmap
-
-- [ ] アフィリエイトリンクの導入
-
 ## Tech Stack
 
 ### Frontend
@@ -29,6 +25,22 @@ A bilingual (Japanese/English) vegan food review platform built with React, Go, 
 
 ### Infrastructure
 - Docker & Docker Compose
+
+## Architecture
+
+バックエンドはクリーンアーキテクチャとドメイン駆動設計（DDD）を採用しています。
+
+- ビジネスロジックをエンティティやバリューオブジェクトに分離し、再利用可能で一貫性のある設計を実現
+- ユビキタス言語を導入してドメインエキスパートと共通の言語で要件を整理し、システム全体の設計を効率化
+- 依存性の方向を外側から内側へ（Handler → UseCase → Domain）統一し、テスタビリティと柔軟性を確保
+
+```
+interfaces/     → usecase/     → domain/
+(Handler,DTO)    (Business)     (Entity,ValueObject,Repository)
+                      ↓
+               infrastructure/
+               (DB,OAuth,JWT)
+```
 
 ## Getting Started
 
