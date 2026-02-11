@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { Leaf, LogOut, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../../../auth';
 import { customerApi } from '../../../../api/customer/customerApi';
 import { reviewApi } from '../../../../api/customer/reviewApi';
@@ -54,7 +55,7 @@ export function MyPage() {
       setReviews(reviews.filter(r => r.id !== reviewId));
     } catch (err) {
       console.error('Failed to delete review:', err);
-      alert('レビューの削除に失敗しました');
+      toast.error('レビューの削除に失敗しました');
     }
   };
 
@@ -65,7 +66,7 @@ export function MyPage() {
       setFavorites(favorites.filter(f => f.productId !== productId));
     } catch (err) {
       console.error('Failed to remove favorite:', err);
-      alert('お気に入りの削除に失敗しました');
+      toast.error('お気に入りの削除に失敗しました');
     }
   };
 
