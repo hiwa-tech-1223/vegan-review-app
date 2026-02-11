@@ -25,7 +25,7 @@ function parseKantanLinkHtml(html: string): ParsedKantanLink {
       const data = JSON.parse(jsonStr);
 
       // 画像URLを構築: d + c_p + p[0]
-      if (data.d && data.c_p && data.p && data.p.length > 0) {
+      if (data.d && data.c_p != null && data.p && data.p.length > 0) {
         result.imageUrl = data.d + data.c_p + data.p[0];
       }
 
