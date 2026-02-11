@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router';
+import { Toaster } from 'sonner';
 // Feature imports
 import { AuthProvider, useAuth } from './pages/auth';
 import { ProductList, ProductDetail } from './pages/customer/products';
@@ -162,6 +163,7 @@ function App() {
       <Router>
         <AppRoutes />
       </Router>
+      <Toaster position="top-right" richColors />
     </AuthProvider>
   );
 }

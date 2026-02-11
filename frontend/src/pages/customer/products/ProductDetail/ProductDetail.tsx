@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { ArrowLeft, Heart, Leaf, Loader2, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../../../auth';
 import { productApi } from '../../../../api/customer/productApi';
 import { ApiProduct } from '../../../../api/customer/productTypes';
@@ -165,7 +166,7 @@ export function ProductDetail() {
       // 商品の評価を再取得して更新
       const updatedProduct = await productApi.getProduct(Number(id));
       setProduct(updatedProduct);
-      alert(isEditMode ? 'レビューを更新しました / Review updated successfully!' : 'レビューを投稿しました / Review submitted successfully!');
+      toast.success(isEditMode ? 'レビューを更新しました / Review updated successfully!' : 'レビューを投稿しました / Review submitted successfully!');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit review';
       setReviewError(message);
